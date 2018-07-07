@@ -1,0 +1,59 @@
+<style>
+    .login {
+        padding: 20px;
+    }
+    .login-avatar {
+        border-radius: 100px;
+        width: 120px;
+        height: 120px;
+        display: block;
+        margin: 10px auto;
+        margin-top: 50px;
+    }
+    .login-username {
+        display: block;
+        text-align: center;
+        color: #444;
+    }
+    .su-button {
+        margin-top: 100px;
+    }
+</style>
+<template>
+    <view class="login">
+        <open-data type="userAvatarUrl" class="login-avatar"></open-data>
+        <open-data type="userNickName" class="login-username"></open-data>
+        <button open-type="getUserInfo" class="su-button su-button--warn" @getuserinfo="getUserInfo">授权登录</button> 
+    </view>
+</template>
+<script>
+    import wepy from 'wepy';
+    import user from '../../store/user';
+    export default class Login extends wepy.page {
+        config = {
+            // navigationBarBackgroundColor: '#fff',
+            navigationBarTextStyle: 'black',
+        };
+        methods = {
+            login() {
+                
+            },
+            async getUserInfo(e) {
+                let loginRes = await wepy.login();
+                if(!e.detail.iv) {
+
+                }
+                else {
+                    user.authorizationLogin(e.detail, loginRes.code).then(res => {
+                        wx.navigateBack();
+                    });
+                }
+            }
+        };
+        onShow() {
+            
+        }
+        onLoad() {
+        }
+    }
+</script>

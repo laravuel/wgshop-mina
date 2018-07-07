@@ -1,0 +1,9 @@
+<template>
+    products
+</template>
+<script>
+    import wepy from 'wepy';
+    export default class Products extends wepy.page {
+        
+    }
+</script>

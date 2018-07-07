@@ -1,0 +1,333 @@
+<template>
+    <block wx:if="{{ product }}">
+        <view class="sliders">
+            <swiper indicator-dots="{{true}}" interval="3000" id="swiper">
+                <swiper-item>
+                    <image src="http://s3.mogucdn.com/p2/170110/88391240_8b27jl45ldgg3g6cf0055226jig0k_640x960.png_468x468.jpg" mode="widthFix"></image>
+                </swiper-item>
+                <swiper-item>
+                    <image src="http://s3.mogucdn.com/p2/170110/88391240_8b27jl45ldgg3g6cf0055226jig0k_640x960.png_468x468.jpg" mode="widthFix"></image>
+                </swiper-item>
+            </swiper>
+        </view>
+        <view class="title-cell">
+            <view class="title zan-font-18">{{ product.name }}</view>
+            <view class="description">{{ product.description || '' }}</view>
+            <view class="price zan-c-red zan-font-18">{{ product.price }}元</view>
+        </view>
+        <view class="panel">
+            <zan-panel hide-border>
+                <zan-cell-group>
+                    <zan-cell title="领券" value="有优惠券可领取" is-link></zan-cell>
+                    <zan-cell title="促销" is-link></zan-cell>
+                </zan-cell-group>
+            </zan-panel>
+        </view>
+        <view class="panel" wx:if="{{ product.specs.data && product.specs.data.length }}">
+            <zan-panel hide-border>
+                <zan-cell title="规格" @tap="openSpecs" is-link>
+                    <span slot="footer">选择 <span wx:for="{{ product.specs.data }}" wx:key="id">{{ item.selected ? item.value.name : item.name }} </span></span>
+                </zan-cell>
+            </zan-panel>
+        </view>
+        <zan-tab list="{{ [{id: 1, title: '概述'}, {id: 2, title: '参数'}] }}" selected-id="{{ tabId }}" bindtabchange="handelTab" height="40" />
+        <view class="detail" wx:if="{{ tabId == 1 }}">
+            <zan-panel hide-border>
+                alsjflakjdsflds
+            </zan-panel>
+        </view>
+        <view class="attributes" wx:else>
+            <zan-panel hide-border>
+                123
+            </zan-panel>
+        </view>
+    </block>
+    <view class="buy-nav">
+        <zan-row>
+            <zan-col col="4" class="nav-icon">
+                <view class="nav-icon">
+                    <zan-icon type="chat"></zan-icon>
+                    <view>客服</view>
+                </view>
+            </zan-col>
+            <zan-col col="4">
+                <navigator url="/pages/shop/carts" class="nav-icon">
+                    <zan-icon type="cart"></zan-icon>
+                    <view>购物车</view>
+                </navigator>
+            </zan-col>
+            <zan-col col="8">
+                <zan-button type="primary" size="large" @tap="openSpecs">加入购物车</zan-button>
+            </zan-col>
+            <zan-col col="8">
+                <zan-button type="danger" size="large">立即购买</zan-button>
+            </zan-col>
+        </zan-row>
+    </view>
+    <zan-popup show="{{ showSpecs }}" type="bottom" bindclose="closeSpecs">
+        <view class="specs">
+            <view class="specs-product zan-clearfix">
+                <view class="thumb">
+                    <image src="{{ sku && sku.thumb ? sku.thumb : product.thumb }}" mode="widthFix" />
+                </view>
+                <view class="product-detail">
+                    <view class="price zan-c-red zan-font-18">￥{{ sku ? sku.price : product.price }}</view>
+                    <view class="stocks">库存： {{ sku ? sku.stocks : product.stocks }} 件</view>
+                    <view class="params">选择： <span wx:for="{{ product.specs.data }}" wx:key="id">{{ item.selected ? item.value.name : item.name }} </span></view>
+                </view>
+            </view>
+            <view class="specs-attributes">
+                <view class="item" wx:for="{{ product.specs.data }}" wx:for-index="index" wx:key="id">
+                    <view class="item-name">{{ item.name }}</view>
+                    <view class="params">
+                        <view class="param-name {{ value.selected ? 'selected' : '' }}" wx:for="{{ item.values }}" wx:for-item="value" wx:for-index="valueIndex" wx:key="id" @tap="selectSpec({{ index }}, {{ valueIndex }})">{{ value.name }}</view>
+                    </view>
+                </view>
+            </view>
+            <view class="buy-number">
+                <zan-cell title="购买数量" class="buy-number-cell">
+                    <zan-stepper slot="footer" stepper="{{ sku ? sku.num : product.num }}" min="1" max="{{ sku ? sku.stocks : product.stocks }}" size="small" bind:change="setNum"></zan-stepper>
+                </zan-cell>
+            </view>
+            <view style="padding: 20px;">
+                <zan-button type="primary" @tap="storeCart">确定</zan-button>
+            </view>
+        </view>
+    </zan-popup>
+</template>
+<script>
+    import wepy from 'wepy';
+    import api from '@/api/api';
+    export default class Product extends wepy.page {
+        config = {
+            navigationBarBackgroundColor: '#fff',
+            navigationBarTextStyle: 'black',
+            usingComponents: {
+                "zan-cell": "../../zanUi/cell/index",
+                "zan-cell-group": "../../zanUi/cell-group/index",
+                "zan-panel": "../../zanUi/panel/index",
+                "zan-tab": "../../zanUi/tab/index",
+                "zan-row": "../../zanUi/row/index",
+                "zan-col": "../../zanUi/col/index",
+                "zan-button": "../../zanUi/btn/index",
+                "zan-icon": "../../zanUi/icon/index",
+                "zan-popup": "../../zanUi/popup/index",
+                "zan-stepper": "../../zanUi/stepper/index",
+            },
+        };
+        data = {
+            tabId: 1,
+            showSpecs: false,
+            id: null,
+            product: null,
+            selectedSpecs: [],
+            sku: null,
+            num: 1,
+        };
+        watch = {
+            selectedSpecs() {
+                if (this.selectedSpecs.length != this.product.specs.data.length) return;
+                let specs = [];
+                this.selectedSpecs.forEach(item => {
+                    specs.push(`${item.attribute_id}:${item.param_id}`);
+                });
+                let flag = specs.join('-');
+                console.log(flag);
+                this.sku = this.product.skus.data.find(item => item.flag == flag);
+            }
+        };
+        onLoad(params) {
+            wepy.setNavigationBarTitle({ title: '商品详情' });
+            this.id = params.id;
+        };
+        onShow() {
+            this.getProduct();
+        };
+        async getProduct() {
+            let res = await api.getProduct(this.id, {
+                include: 'attributes.values,specs.values,brand,skus.params,images'
+            });
+            this.product = res.data;
+            this.$apply();
+        };
+        closeSpecs() {
+            this.showSpecs = false;
+            this.$apply();
+        };
+        openSpecs() {
+            this.showSpecs = true;
+        };
+        // 添加商品到购物车
+        async storeCart() {
+            if (this.product.skus && !this.selectedSpecs.length) {
+                wepy.showToast({
+                    title: '请选择规格~',
+                    icon: 'none'
+                });
+                return;
+            }
+            let res = await api.storeCart({
+                product_id: this.product.id,
+                sku_id: this.sku.id,
+                num: this.sku.num
+            });
+            if (!res.error) {
+                this.closeSpecs();
+                wepy.showToast({
+                    title: '已加入购物车',
+                });
+            }
+        }
+        methods = {
+            handelTab(e) {
+                this.tabId = e.detail;
+            },
+            selectSpec(index, valueIndex) {
+                let spec = this.product.specs.data[index];
+                spec.values.forEach(item => {
+                    item.selected = false;
+                });
+                let value = spec.values[valueIndex];
+                value.selected = true;
+                spec.selected = true;
+                spec.value = value;
+                let findSpecIndex = this.selectedSpecs.findIndex(item => item.attribute_id == spec.id);
+                if (findSpecIndex > -1) {
+                    let findSpec = this.selectedSpecs[findSpecIndex];
+                    findSpec.param_id = value.id;
+                } else {
+                    this.selectedSpecs.push({
+                        index: index,
+                        attribute_id: spec.id,
+                        param_id: value.id,
+                        param_name: value.name
+                    });
+                }
+                this.selectedSpecs.sort((a, b) => {
+                    return a.index > b.index;
+                });
+            },
+            setNum(event) {
+                this.sku.num = event.detail;
+            }
+        }
+    }
+</script>
+<style lang="scss">
+    .buy-nav button {
+        border-radius: 0;
+    }
+    page {
+        padding-bottom: 60px;
+    }
+    .buy-number-cell view {
+        font-size: 16px;
+    }
+</style>
+<style lang="scss" scoped>
+    .sliders {
+        max-height: 400px;
+        text-align: center;
+        overflow: hidden;
+        swiper {
+            height: 400px;
+        }
+        image {
+            width: 100%;
+        }
+    }
+    .panel {
+        margin-bottom: 10px;
+    }
+    .title-cell {
+        background: #fff;
+        margin-bottom: 10px;
+        padding: 10px;
+        .title {
+            color: #333;
+        }
+        .description {
+            color: #999;
+            padding: 10px 0;
+        }
+        .price {}
+    }
+    .detail {
+        padding: 10px 0;
+        background: #fff;
+    }
+    .attributes {
+        padding: 10px;
+        background: #fff;
+    }
+    .buy-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border-top: 1px solid #eee;
+        .nav-icon {
+            padding-top: 7px;
+            text-align: center;
+            color: #666;
+            cursor: pointer;
+        }
+    }
+    .specs {
+        width: 100vw;
+        background: #fff;
+        .specs-product {
+            padding: 10px 20px;
+            position: relative;
+            .thumb {
+                position: absolute;
+                top: -20px;
+                width: 100px;
+                height: 100px;
+                border: 1px solid #ddd;
+                padding: 3px;
+                background: #fff;
+                border-radius: 5px;
+                overflow: hidden;
+                vertical-align: middle;
+                line-height: 100px;
+                image {
+                    width: 100px;
+                    height: 100px;
+                    vertical-align: middle;
+                }
+            }
+            .product-detail {
+                padding-left: 120px;
+                .stocks {
+                    padding: 5px 0;
+                }
+            }
+        }
+        .specs-attributes {
+            .item {
+                padding: 10px;
+                border-bottom: 1px solid #eee;
+                .item-name {
+                    font-size: 16px;
+                    color: #333;
+                    padding: 10px;
+                }
+                .param-name {
+                    font-size: 12px;
+                    color: #666;
+                    display: inline-block;
+                    padding: 5px 20px;
+                    background: #eee;
+                    margin: 5px 8px 5px 0;
+                    border-radius: 15px;
+                }
+                .selected {
+                    background: #409EFF;
+                    color: #fff;
+                }
+            }
+        }
+    }
+</style>

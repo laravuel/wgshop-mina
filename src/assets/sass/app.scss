@@ -1,0 +1,13 @@
+page {
+    font-size: 14px;
+    background: #f2f2f2;
+}
+.flex {
+    display: -webkit-flex;
+    display: flex;
+}
+.flex-middle {
+    @extend .flex;
+    flex-wrap: nowrap;
+    align-items: center;
+}

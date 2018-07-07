@@ -1,0 +1,37 @@
+<style>
+    @import 'zanUi/index.wxss';
+    @import 'assets/sass/app';
+</style>
+<script>
+    import wepy from 'wepy';
+    import 'wepy-async-function';
+    import Promise from 'promise-polyfill';
+    export default class extends wepy.app {
+        config = {
+            pages: [
+                'pages/index',
+                'pages/shop/products',
+                'pages/shop/product',
+                'pages/shop/carts',
+                
+                'pages/auth/login',
+            ],
+            window: {
+                navigationBarBackgroundColor: '#f7f7f7',
+                navigationBarTextStyle: 'black',
+                navigationBarTitleText: 'WGShop',
+                backgroundColor: '#f7f7f7'
+            }
+            
+        };
+        constructor() {
+            super();
+            this.use('promisify');
+            this.use('requestfix');
+        }
+        onLaunch(params) {
+        }
+        globalData = {
+        };
+    }
+</script>
