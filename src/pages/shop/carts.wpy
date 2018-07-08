@@ -5,8 +5,9 @@
                 <view class="item-header">
                     <zan-row>
                         <zan-col col="2">
-                            <view class="select zan-c-gray-dark">
-                                <zan-icon type="checked"></zan-icon>
+                            <view class="select zan-c-gray-dark" @tap="select({{ index }})">
+                                <zan-icon type="check" class="select-icon" wx:if="{{ !item.selected }}"></zan-icon>
+                                <zan-icon type="checked" class="select-icon selected" wx:else></zan-icon>
                             </view>
                         </zan-col>
                         <zan-col col="16">
@@ -44,8 +45,26 @@
         </repeat>
         <placeholder :show.sync="isEmpty" message="购物车什么都没有奥~" iconType="custome">
             <zan-icon slot="icon" type="shopping-cart" style="font-size: 50px; color: #999;"></zan-icon>
-            <navigator open-type="redirect" url="/pages/index"><zan-button type="primary" style="display: inline-block; margin: 20px;">去商城逛逛</zan-button></navigator>
+            <navigator open-type="redirect" url="/pages/index"><button style="display: inline-block; margin: 20px;" class="wg-btn-danger radius">去商城逛逛</button></navigator>
         </placeholder>
+    </view>
+    <view class="fill-block"></view>
+    <view class="buy-nav">
+        <zan-row>
+            <zan-col col="6">
+                <view class="select" @tap="selectAll">
+                    <zan-icon slot="icon" type="checked" class="select-icon selected" wx:if="{{ selectedAll }}"></zan-icon>
+                    <zan-icon slot="icon" type="check" class="select-icon" wx:else></zan-icon>
+                    全选
+                </view>
+            </zan-col>
+            <zan-col col="10">
+                <view class="price">合计：<text>{{ total.price }}元</text></view>
+            </zan-col>
+            <zan-col col="8">
+                <button disabled="{{ total.num <= 0 }}" class="wg-btn-danger large">结算({{ total.num }})</button>
+            </zan-col>
+        </zan-row>
     </view>
 </template>
 
@@ -63,21 +82,15 @@
             navigationBarBackgroundColor: '#fff',
             navigationBarTextStyle: 'black',
             usingComponents: {
-                "zan-cell": "../../zanUi/cell/index",
-                "zan-cell-group": "../../zanUi/cell-group/index",
-                "zan-panel": "../../zanUi/panel/index",
-                "zan-tab": "../../zanUi/tab/index",
                 "zan-row": "../../zanUi/row/index",
                 "zan-col": "../../zanUi/col/index",
-                "zan-button": "../../zanUi/btn/index",
-                "zan-button-group": "../../zanUi/btn-group/index",
                 "zan-icon": "../../zanUi/icon/index",
-                "zan-popup": "../../zanUi/popup/index",
                 "zan-stepper": "../../zanUi/stepper/index",
             },
         };
         data = {
             carts: null,
+            selected: [],
         };
         onLoad() {
             wepy.setNavigationBarTitle({ title: '购物车' });
@@ -85,14 +98,56 @@
         computed = {
             isEmpty() {
                 return !this.carts || !this.carts.length;
+            },
+            selectedAll() {
+                if(!this.isEmpty) {
+                    return this.selected.length == this.carts.length;
+                }
+                return false;
+            },
+            total() {
+                let total = {
+                    price: 0,
+                    num: 0
+                };
+                if(!this.isEmpty) {
+                    this.carts.map(item => {
+                        if(item.selected) {
+                            total.price += (item.sku ? item.sku.price : item.product.price) * item.num;
+                            total.num += item.num;
+                        }
+                    });
+                }
+                return total;
+            }
+        };
+        watch = {
+            carts() {
+                let selected = [];
+                this.carts.map(item => {
+                    if(item.selected) {
+                        selected.push(item.id);
+                    }
+                });
+                this.selected = selected;
+                this.$apply();
             }
         };
         async onShow() {
             let res = await api.getCarts({ include: 'product,sku', params: 1 });
             this.carts = res.data.data;
+            this.selectAll();
             this.$apply();
         };
+        selectAll() {
+            this.carts.map(item => {
+                item.selected = this.selectedAll ? false : true;
+            });
+        };
         methods = {
+            select(index) {
+                this.carts[index].selected = !this.carts[index].selected;
+            },
             async setNum(index, event) {
                 let that = this;
                 this.carts[index].num = event.detail;
@@ -110,6 +165,10 @@
 </script>
 
 <style lang="scss" scoped>
+    @import '../../assets/sass/variable';
+    .select-ionc {
+        color: #999;
+    }
     .carts {
         margin: 10px 0;
         .item {
@@ -121,6 +180,9 @@
                 .select {
                     height: 40px;
                     line-height: 40px;
+                    .selected {
+                        color: $color-danger;
+                    }
                 }
                 .title {
                     image {
@@ -151,6 +213,33 @@
                     border-radius: 3px;
                 }
             }
+        }
+    }
+    .buy-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #fff;
+        line-height: 48px;
+        .select {
+            padding-left: 20px;
+            font-size: 16px;
+            .selected {
+                color: $color-danger;
+            }
+        }
+        
+        .price {
+            text-align: right;
+            padding-right: 20px;
+            font-size: 16px;
+            text {
+                color: $color-danger;
+            }
+        }
+        button::after {
+            border: none;
         }
     }
 </style>

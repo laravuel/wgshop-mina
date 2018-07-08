@@ -1,0 +1,20 @@
+<template>
+    buy
+</template>
+
+<script>
+    import wepy from 'wepy';
+    export default class Buy extends wepy.page {
+        data = {
+            productId: null,
+            skuId: null,
+            num: 0,
+            cartIds: null
+        };
+        onLoad(param) {
+            this.productId = param.product_id;
+            this.skuId = param.sku_id;
+            this.cartIds = param.carts;
+        }
+    }
+</script>

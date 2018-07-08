@@ -2,10 +2,12 @@
     @import 'zanUi/index.wxss';
     @import 'assets/sass/app';
 </style>
+
 <script>
     import wepy from 'wepy';
     import 'wepy-async-function';
     import Promise from 'promise-polyfill';
+
     export default class extends wepy.app {
         config = {
             pages: [
@@ -13,6 +15,7 @@
                 'pages/shop/products',
                 'pages/shop/product',
                 'pages/shop/carts',
+                'pages/shop/buy',
                 
                 'pages/auth/login',
             ],

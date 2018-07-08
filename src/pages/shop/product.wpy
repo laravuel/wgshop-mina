@@ -13,7 +13,7 @@
         <view class="title-cell">
             <view class="title zan-font-18">{{ product.name }}</view>
             <view class="description">{{ product.description || '' }}</view>
-            <view class="price zan-c-red zan-font-18">{{ product.price }}元</view>
+            <view class="price zan-font-18">{{ product.price }}元</view>
         </view>
         <view class="panel">
             <zan-panel hide-border>
@@ -45,22 +45,21 @@
     <view class="buy-nav">
         <zan-row>
             <zan-col col="4" class="nav-icon">
-                <view class="nav-icon">
-                    <zan-icon type="chat"></zan-icon>
-                    <view>客服</view>
-                </view>
+                <button class="nav-icon" open-type="contact">
+                    <zan-icon type="chat" style="font-size: 25px; color: #409EFF;"></zan-icon>
+                </button>
             </zan-col>
             <zan-col col="4">
                 <navigator url="/pages/shop/carts" class="nav-icon">
-                    <zan-icon type="cart"></zan-icon>
-                    <view>购物车</view>
+                    <view class="badge" wx:if="{{ cartsCount }}">{{ cartsCount }}</view>
+                    <zan-icon type="cart" style="font-size: 25px;"></zan-icon>
                 </navigator>
             </zan-col>
             <zan-col col="8">
-                <zan-button type="primary" size="large" @tap="openSpecs">加入购物车</zan-button>
+                <button class="wg-btn-warn large" @tap="openSpecs">加入购物车</button>
             </zan-col>
             <zan-col col="8">
-                <zan-button type="danger" size="large">立即购买</zan-button>
+                <button class="wg-btn-danger large" @tap="buy">立即购买</button>
             </zan-col>
         </zan-row>
     </view>
@@ -90,7 +89,7 @@
                 </zan-cell>
             </view>
             <view style="padding: 20px;">
-                <zan-button type="primary" @tap="storeCart">确定</zan-button>
+                <button class="wg-btn-danger radius" disabled="{{ !(product.skus ? sku && sku.num : product.num) }}" @tap="storeCart">确定</button>
             </view>
         </view>
     </zan-popup>
@@ -113,6 +112,7 @@
                 "zan-icon": "../../zanUi/icon/index",
                 "zan-popup": "../../zanUi/popup/index",
                 "zan-stepper": "../../zanUi/stepper/index",
+                "zan-badge": "../../zanUi/badge/index",
             },
         };
         data = {
@@ -122,7 +122,8 @@
             product: null,
             selectedSpecs: [],
             sku: null,
-            num: 1,
+            cartsCount: 0,
+            justBuy: false,
         };
         watch = {
             selectedSpecs() {
@@ -141,7 +142,11 @@
             this.id = params.id;
         };
         onShow() {
+            this.closeSpecs();
+            this.sku = null;
+            this.selectedSpecs = [];
             this.getProduct();
+            this.getCartsCount();
         };
         async getProduct() {
             let res = await api.getProduct(this.id, {
@@ -150,7 +155,13 @@
             this.product = res.data;
             this.$apply();
         };
+        async getCartsCount() {
+            let res = await api.getCartsCount();
+            this.cartsCount = res.data;
+            this.$apply();
+        };
         closeSpecs() {
+            this.justBuy = false;
             this.showSpecs = false;
             this.$apply();
         };
@@ -166,18 +177,31 @@
                 });
                 return;
             }
-            let res = await api.storeCart({
-                product_id: this.product.id,
-                sku_id: this.sku.id,
-                num: this.sku.num
-            });
-            if (!res.error) {
-                this.closeSpecs();
-                wepy.showToast({
-                    title: '已加入购物车',
+            if(this.justBuy) {
+                wepy.navigateTo({
+                    url: `/pages/shop/buy?product_id=${this.product.id}&sku_id=${this.sku.id}&num=${this.sku.num}`
                 });
             }
-        }
+            else {
+                let res = await api.storeCart({
+                    product_id: this.product.id,
+                    sku_id: this.sku.id,
+                    num: this.sku.num
+                });
+                if (!res.error) {
+                    this.closeSpecs();
+                    this.cartsCount = res.data.meta.count;
+                    wepy.showToast({
+                        title: '已加入购物车',
+                    });
+                }
+            }
+            this.$apply();
+        };
+        buy() {
+            this.justBuy = true;
+            this.openSpecs();
+        };
         methods = {
             handelTab(e) {
                 this.tabId = e.detail;
@@ -225,6 +249,7 @@
     }
 </style>
 <style lang="scss" scoped>
+    @import '../../assets/sass/variable';
     .sliders {
         max-height: 400px;
         text-align: center;
@@ -250,7 +275,9 @@
             color: #999;
             padding: 10px 0;
         }
-        .price {}
+        .price {
+            color: $color-danger;
+        }
     }
     .detail {
         padding: 10px 0;
@@ -267,12 +294,52 @@
         right: 0;
         background: #fff;
         border-top: 1px solid #eee;
+        line-height: 46px;
         .nav-icon {
-            padding-top: 7px;
             text-align: center;
             color: #666;
             cursor: pointer;
+            position: relative;
+            .badge {
+                position:absolute;
+                top: -3px;
+                right: 18px;
+                height: 1.6em;
+                min-width: 1.6em;
+                line-height: 1.6;
+                padding: 0 .4em;
+                font-size: 20px;
+                border-radius: .8em;
+                background: $color-danger;
+                color: #fff;
+                text-align: center;
+                white-space: nowrap;
+                -webkit-transform: translateX(50%) scale(.5);
+                transform: translateX(50%) scale(.5);
+                -webkit-transform-origin: center;
+                transform-origin: center;
+                z-index: 10;
+                box-shadow: 0 0 0 2px #fff;
+                box-sizing: border-box;
+            }
+            &::before {
+                position: absolute;
+                content: '';
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 1px;
+                background: #eee;
+            }
         }
+        button.nav-icon {
+            background: none;
+            line-height: 46px;
+            &::after {
+                border: none;
+            }
+        }
+
     }
     .specs {
         width: 100vw;
@@ -324,7 +391,7 @@
                     border-radius: 15px;
                 }
                 .selected {
-                    background: #409EFF;
+                    background: $color-danger;
                     color: #fff;
                 }
             }

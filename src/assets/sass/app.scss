@@ -1,6 +1,7 @@
+@import './variable';
 page {
     font-size: 14px;
-    background: #f2f2f2;
+    background: $color-light-gray;
 }
 .flex {
     display: -webkit-flex;
@@ -10,4 +11,45 @@ page {
     @extend .flex;
     flex-wrap: nowrap;
     align-items: center;
+}
+.wg-fill-block {
+    padding: 40px 0;
+}
+
+.wg-btn {
+    background-color: $color-light-gray;
+    font-size: 16px;
+    border-radius: 0;
+    &.large {
+        padding: 5px 0;
+    }
+    &.small {
+        padding: 0;
+    }
+    &.radius {
+        border-radius: 3px;
+    }
+    &::after {
+        border: none;
+    }
+}
+.wg-btn-primary {
+    @extend .wg-btn;
+    background-color: $color-primary;
+    color: #fff;
+}
+.wg-btn-success {
+    @extend .wg-btn;
+    background-color: $color-success;
+    color: #fff;
+}
+.wg-btn-warn {
+    @extend .wg-btn;
+    background-color: $color-warn;
+    color: #fff;
+}
+.wg-btn-danger {
+    @extend .wg-btn;
+    background-color: $color-danger;
+    color: #fff;
 }
