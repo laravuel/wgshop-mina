@@ -1,20 +1,147 @@
 <template>
-    buy
+    <view class="panel" wx:if="{{ carts && carts.length > 0}}">
+        <view class="panel-title">购物清单</view>
+        <view class="detailed-list">
+            <repeat for="{{ carts }}" key="id" index="index" item="item">
+                <view class="item">
+                    <view class="item-header">
+                        <zan-row>
+                            <zan-col col="18">
+                                <view class="title flex-middle">
+                                    <image src="{{ item.sku && item.sku.thumb ? item.sku.thumb : item.product.thumb }}" />
+                                    <view>
+                                        <view class="zan-ellipsis">{{ item.product.name }} </view>
+                                        <view wx:if="{{ item.sku }}" class="name wg-color-dark-gray">
+                                            <text wx:for="{{ item.sku.params }}" wx:for-item="param" wx:key="id">{{ param.param_name }} </text>
+                                        </view>
+                                    </view>
+                                </view>
+                            </zan-col>
+                            <zan-col col="6">
+                                <view class="price zan-pull-right">
+                                    <text class="zan-c-gray-dark">{{ item.num }} × </text><text class="zan-font-16 zan-c-red">{{ item.sku ? item.sku.price : item.product.price }}元</text>
+                                </view>
+                            </zan-col>
+                        </zan-row>
+                    </view>
+                </view>
+            </repeat>
+        </view>
+    </view>
+    <placeholder :show.sync="isEmpty" message="亲，您是不是忘了买点什么了~" iconType="custome">
+        <navigator open-type="redirect" url="/pages/index"><button style="display: inline-block; margin: 20px;" class="wg-btn-danger radius">看看购物车</button></navigator>
+    </placeholder>
+    <view class="wg-fill-block"></view>
 </template>
 
 <script>
     import wepy from 'wepy';
+    import api from '@/api/api';
+    import Placeholder from '@/components/common/placeholder';
     export default class Buy extends wepy.page {
+        components = {
+            placeholder: Placeholder
+        };
+        config = {
+            usingComponents: {
+                "zan-row": "../../zanUi/row/index",
+                "zan-col": "../../zanUi/col/index",
+                "zan-icon": "../../zanUi/icon/index",
+                "zan-panel": "../../zanUi/panel/index",
+            },
+        };
         data = {
             productId: null,
             skuId: null,
             num: 0,
-            cartIds: null
+            cartIds: null,
+            carts: null,
+            isEmpty: false
         };
         onLoad(param) {
+            wepy.setNavigationBarTitle({
+                title: '下单'
+            });
+            // 直接购买
             this.productId = param.product_id;
             this.skuId = param.sku_id;
+            this.num = param.num;
+            // 购物车下单
             this.cartIds = param.carts;
+        };
+        async onShow() {
+            if ((this.skuId || this.productId) && !this.num) {
+                this.isEmpty = true;
+                return;
+            }
+            if (this.skuId && this.productId) {
+                // 直接购买 选择了sku的商品
+                let res = await api.getProductSku(this.productId, this.skuId, {
+                    include: 'params,product'
+                });
+                this.carts = [];
+                this.carts.push({
+                    sku: res.data,
+                    product: res.data.product,
+                    num: this.num
+                });
+            } else if (this.productId) {
+                // 直接购买 无sku的商品
+                let res = await api.getProduct(this.productId, {
+                    include: 'skus'
+                });
+                if(res.data.skus) {
+                    wepy.showModal({
+                        title: '提示',
+                        content: '请选择商品规格！',
+                        showCancel: false,
+                    }).then(ret => {
+                        wepy.navigateBack();
+                    });
+                    return ;
+                }
+                this.carts = [];
+                this.carts.push({
+                    sku: null,
+                    product: res.data,
+                    num: this.num
+                });
+            } else if (this.cartIds) {
+                // 购物车选择购买
+                let res = await api.getCarts({
+                    ids: this.cartIds,
+                    include: 'product,sku',
+                    params: 1
+                });
+                this.carts = res.data.data;
+            }
+            this.$apply();
         }
     }
 </script>
+
+<style lang="scss" scoped>
+    .panel {
+        background: #fff;
+        margin: 8px 0;
+        .panel-title {
+            border-bottom: 1px solid #eee;
+            padding: 15px;
+            font-size: 16px;
+        }
+        .detailed-list {
+            margin: 0;
+            .item {
+                border: none;
+                border-bottom: 1px solid #eee;
+                margin: 0px 15px;
+                .item-header {
+                    padding: 15px 0;
+                }
+            }
+            .item:last-child {
+                border: none;
+            }
+        }
+    }
+</style>

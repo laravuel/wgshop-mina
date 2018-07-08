@@ -15,6 +15,27 @@ page {
 .wg-fill-block {
     padding: 40px 0;
 }
+.wg-color-primary {
+    color: $color-primary;
+}
+.wg-color-success {
+    color: $color-success;
+}
+.wg-color-warn {
+    color: $color-warn;
+}
+.wg-color-danger {
+    color: $color-danger;
+}
+.wg-color-gray {
+    color: $color-gray;
+}
+.wg-color-light-gray {
+    color: $color-light-gray;
+}
+.wg-color-dark-gray {
+    color: $color-dark-gray;
+}
 
 .wg-btn {
     background-color: $color-light-gray;
@@ -52,4 +73,52 @@ page {
     @extend .wg-btn;
     background-color: $color-danger;
     color: #fff;
+}
+
+// 一个商品清单公共样式
+.detailed-list {
+    margin: 10px 0;
+    .item {
+        background: #fafafa;
+        border-top: 1px solid #eee;
+        .item-header {
+            background: #fff;
+            padding: 10px 15px;
+            .select {
+                height: 40px;
+                line-height: 40px;
+                .selected {
+                    color: $color-danger;
+                }
+            }
+            .title {
+                image {
+                    width: 30px;
+                    height: 40px;
+                    margin-right: 10px;
+                }
+            }
+            .price {
+                line-height: 40px;
+            }
+        }
+        .item-main {
+            padding: 15px;
+            .cart-num {
+                justify-content: flex-end;
+            }
+            .name {
+                line-height: 30px;
+            }
+            .delete {
+                line-height: 30px;
+                width: 30px;
+                border: 1px solid #eee;
+                text-align: center;
+                margin-left: 10px;
+                background: #eee;
+                border-radius: 3px;
+            }
+        }
+    }
 }

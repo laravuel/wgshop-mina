@@ -6,6 +6,7 @@ const authorization = (code, data) => http.request(`/socials/mini_program/author
 
 // 商品
 const getProduct = (id, data) => http.request(`/shop/products/${id}`, { data });
+const getProductSku = (id, skuId, data) => http.request(`/shop/products/${id}/skus/${skuId}`, { data });
 
 // 购物车
 const getCartsCount = () => http.request(`/shop/carts/count`);
@@ -17,6 +18,7 @@ const deleteCart = (id) => http.request(`/shop/carts/${id}`, { method: 'DELETE' 
 export default {
     authorization,
     getProduct,
+    getProductSku,
     getCartsCount,
     getCarts,
     storeCart,

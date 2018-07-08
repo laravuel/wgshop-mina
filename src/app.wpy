@@ -20,7 +20,7 @@
                 'pages/auth/login',
             ],
             window: {
-                navigationBarBackgroundColor: '#f7f7f7',
+                navigationBarBackgroundColor: '#fff',
                 navigationBarTextStyle: 'black',
                 navigationBarTitleText: 'WGShop',
                 backgroundColor: '#f7f7f7'

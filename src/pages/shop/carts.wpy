@@ -1,5 +1,5 @@
 <template>
-    <view class="carts">
+    <view class="detailed-list">
         <repeat for="{{ carts }}" key="id" index="index" item="item">
             <view class="item">
                 <view class="item-header">
@@ -48,7 +48,7 @@
             <navigator open-type="redirect" url="/pages/index"><button style="display: inline-block; margin: 20px;" class="wg-btn-danger radius">去商城逛逛</button></navigator>
         </placeholder>
     </view>
-    <view class="fill-block"></view>
+    <view class="wg-fill-block"></view>
     <view class="buy-nav">
         <zan-row>
             <zan-col col="6">
@@ -169,52 +169,7 @@
     .select-ionc {
         color: #999;
     }
-    .carts {
-        margin: 10px 0;
-        .item {
-            background: #fafafa;
-            border-top: 1px solid #eee;
-            .item-header {
-                background: #fff;
-                padding: 10px 15px;
-                .select {
-                    height: 40px;
-                    line-height: 40px;
-                    .selected {
-                        color: $color-danger;
-                    }
-                }
-                .title {
-                    image {
-                        width: 30px;
-                        height: 40px;
-                        margin-right: 10px;
-                    }
-                }
-                .price {
-                    line-height: 40px;
-                }
-            }
-            .item-main {
-                padding: 15px;
-                .cart-num {
-                    justify-content: flex-end;
-                }
-                .name {
-                    line-height: 30px;
-                }
-                .delete {
-                    line-height: 30px;
-                    width: 30px;
-                    border: 1px solid #eee;
-                    text-align: center;
-                    margin-left: 10px;
-                    background: #eee;
-                    border-radius: 3px;
-                }
-            }
-        }
-    }
+    
     .buy-nav {
         position: fixed;
         bottom: 0;

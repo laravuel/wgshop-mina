@@ -55,10 +55,23 @@ export default {
                 title: '加载中'
             });
         }
-        let res = await wepy.request(params);
+        try {
+            let res = await wepy.request(params);
+            // 请求结束
+            res = this.after(res);
+            return res;
+        }
+        catch(res) {
+            // 请求错误
+            wepy.hideLoading();
+            wepy.showModal({
+                title: '提示',
+                content: '服务器未响应或超时，请稍后再试',
+            }).then(ret => {
 
-        // 请求结束
-        res = this.after(res);
-        return res;
+            });
+            return res;
+        }
+        
     }
 };
