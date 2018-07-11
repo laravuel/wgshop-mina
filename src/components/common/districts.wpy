@@ -1,0 +1,185 @@
+<template>
+    <zan-popup show="{{ showPopup }}" type="bottom" bindclose="close">
+        <view class="districts">
+            <view class="header zan-clearfix">
+                <view wx:for="{{ tabs }}" wx:key="level" class="item {{ level == item.level ? 'checked' : '' }}" @tap="tabEvent({{ item.level }})">{{ item.name }}</view>
+            </view>
+            <view class="main">
+                <view wx:if="{{ level == 1 }}">
+                    <text wx:for="{{ provinces }}" wx:key="id" class="item {{ province.id == item.id ? 'checked' : '' }}" @tap="select({{ item }})">{{ item.name }}</text>
+                </view>
+                <view wx:if="{{ level == 2 }}">
+                    <text wx:for="{{ cities }}" wx:key="id" class="item {{ city.id == item.id ? 'checked' : '' }}" @tap="select({{ item }})">{{ item.name }}</text>
+                </view>
+                <view wx:if="{{ level == 3 }}">
+                    <text wx:for="{{ areas }}" wx:key="id" class="item {{ area.id == item.id ? 'checked' : '' }}" @tap="select({{ item }})">{{ item.name }}</text>
+                </view>
+            </view>
+            <button class="wg-btn large" style="border-top: 1px solid #eee" @tap="close">取消</button>
+        </view>
+    </zan-popup>
+</template>
+
+<script>
+    import wepy from 'wepy';
+    import api from '@/api/api';
+    export default class Districts extends wepy.component {
+        config = {
+            usingComponents: {
+                "zan-popup": "../../zanUi/popup/index",
+            },
+        };
+        data = {
+            showPopup: false,
+            provinces: null,
+            cities: null,
+            areas: null,
+            districts: null,
+            province: {id: 0, name: ''},
+            city: {id: 0, name: ''},
+            area: {id: 0, name: ''},
+            level: 0,
+            tabs: [{
+                level: 1,
+                name: '省'
+            }, {
+                level: 2,
+                name: '市'
+            }, {
+                level: 3,
+                name: '区县'
+            }],
+        };
+        watch = {
+            async level(value) {
+                if(value == 1 && !this.provinces) {
+                    this.provinces = await this.getDistricts();
+                }
+                else if(value == 2 && this.province.id) {
+                    this.cities = await this.getDistricts(this.province.id);
+                }
+                else if(value == 3) {
+                    this.areas = await this.getDistricts(this.city.id);
+                }
+                this.$apply();
+            }
+        };
+        onLoad() {
+            this.tab(1);
+        };
+        async getDistricts(pid = 0) {
+            let res = await api.getDistricts({
+                pid: pid
+            });
+            return res.data.districts;
+        };
+        async tab(level) {
+            if(level == 1) {
+
+            }
+            else if(level == 2) {
+                if(!this.province.id) {
+                    wepy.showToast({
+                        title: '请先选择省份',
+                        icon: 'none'
+                    });
+                    return ;
+                }
+            }
+            else if(level == 3) {
+                if(!this.province.id || !this.city.id) {
+                    wepy.showToast({
+                        title: '请先选择城市',
+                        icon: 'none'
+                    });
+                    return ;
+                }
+            }
+            this.level = level;
+            this.$apply();
+        };
+        methods = {
+            show() {
+                this.showPopup = true;
+            },
+            close() {
+                this.showPopup = false;
+            },
+            tabEvent(level) {
+                this.tab(level);
+            },
+            select(item) {
+                if(this.level == 1) {
+                    this.province = {
+                        id: item.id,
+                        name: item.name
+                    };
+                    this.city = {
+                        id: 0,
+                        name: ''
+                    };
+                    this.cities = null;
+                    this.areas = null;
+                    this.level = 2;
+                }
+                else if(this.level == 2) {
+                    this.city = {
+                        id: item.id,
+                        name: item.name
+                    };
+                    this.area = {
+                        id: 0,
+                        name: ''
+                    };
+                    this.areas = null;
+                    this.level = 3;
+                }
+                else if(this.level == 3) {
+                    this.area = {
+                        id: item.id,
+                        name: item.name
+                    };
+                    this.$emit('selected', this.province, this.city, this.area);
+                    this.showPopup = false;
+                }
+            }
+        };
+    }
+</script>
+
+<style lang="scss" scoped>
+    @import '../../assets/sass/variable';
+    .districts {
+        background: #fff;
+        width: 100vw;
+        .header {
+            background: #f7f7f7;
+            .item {
+                display: inline-block;
+                width: 33%;
+                padding: 15px 0;
+                text-align: center;
+                color: #666;
+                &.checked {
+                    background: #fff;
+                }
+            }
+        }
+        .main {
+            padding: 30px 20px;
+            height: 200px;
+            overflow-y: auto;
+            .item {
+                display: inline-block;
+                padding: 5px 10px;
+                color: #666;
+                &.checked {
+                    background: $color-danger;
+                    color: #fff;
+                    border-radius: 3px;
+                }
+            }
+        }
+    }
+</style>
+

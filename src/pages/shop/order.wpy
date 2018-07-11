@@ -1,0 +1,243 @@
+<template>
+    <view class="status">
+        <zan-row>
+            <zan-col col="16">
+                <view class="name">
+                    <block wx:if="{{ !order.paid && !order.is_cancel }}">
+                        {{ order.pay_name }}
+                    </block>
+                    <block wx:else>
+                        {{ order.status_name }}
+                        <block wx:if="{{ !order.is_cancel }}">
+                            {{ order.shipping_name }}
+                        </block>
+                    </block>
+                </view>
+                <view class="logistic" wx:if="{{ order.is_shipped }}">
+                    <view>物流公司：<text></text></view>
+                    <view>物流单号：<text></text></view>
+                </view>
+            </zan-col>
+            <zan-col col="8">
+                <img src="" />
+            </zan-col>
+        </zan-row>
+    </view>
+    <view class="address">
+        <zan-row>
+            <zan-col col="2">
+                <view class="icon">
+                    <zan-icon type="location" style="font-size: 18px;"></zan-icon>
+                </view>
+            </zan-col>
+            <zan-col col="22">
+                <view class="name">{{ order.phone }} {{ order.name }}</view>
+                <view class="street">{{ order.address }}</view>
+            </zan-col>
+        </zan-row>
+    </view>
+    <view class="detailed-list">
+        <repeat for="{{ order.details.data }}" key="id" index="index" item="item">
+            <view class="item">
+                <view class="item-header">
+                    <zan-row>
+                        <zan-col col="18">
+                            <view class="title flex-middle">
+                                <image src="{{ item.thumb }}" />
+                                <view>
+                                    <view class="zan-ellipsis">{{ item.name }} </view>
+                                    <view class="name wg-color-dark-gray">
+                                        {{ item.params }}
+                                    </view>
+                                </view>
+                            </view>
+                        </zan-col>
+                        <zan-col col="6">
+                            <view class="price zan-pull-right">
+                                <text class="zan-c-gray-dark">{{ item.num }} × </text><text class="zan-font-16 wg-color-dark-gray">{{ item.price }}元</text>
+                            </view>
+                        </zan-col>
+                    </zan-row>
+                </view>
+            </view>
+        </repeat>
+    </view>
+    <view class="total">
+        <view>
+            <view class="wg-flex">
+                <text>订单金额：</text>
+                <text>￥{{ order.total_price }}</text>
+            </view>
+            <view class="wg-flex">
+                <text>运费：</text>
+                <text>免运费</text>
+            </view>
+        </view>
+        <view class="amount wg-flex">
+            <text>应付金额：</text>
+            <text>￥{{ order.amount }}</text>
+        </view>
+    </view>
+    <view class="info">
+        <view class="wg-flex">
+            <text>下单日期</text>
+            <text>{{ order.created_at }}</text>
+        </view>
+        <view class="wg-flex">
+            <text>订单编号</text>
+            <text>{{ order.order_sn }}</text>
+        </view>
+        <view class="wg-flex">
+            <text>支付方式</text>
+            <text>{{ order.payment_name }}</text>
+        </view>
+    </view>
+    <view class="buttons wg-flex-middle" wx:if="{{ !order.paid && !order.is_cancel }}">
+        <button class="wg-btn large" @tap="cancel">取消订单</button>
+        <button class="wg-btn-danger large" @tap="pay">微信支付</button>
+    </view>
+    <view class="buttons" wx:elif="{{ !order.is_cancel && order.is_shipped }}">
+        <button class="wg-btn-danger large" @tap="receiving">确认收货</button>
+    </view>
+</template>
+
+<script>
+    import wepy from 'wepy';
+    import api from '@/api/api';
+    import pay from '@/utils/pay';
+    export default class Order extends wepy.page {
+        config = {
+            navigationBarBackgroundColor: '#fff',
+            navigationBarTextStyle: 'black',
+            usingComponents: {
+                "zan-row": "../../zanUi/row/index",
+                "zan-col": "../../zanUi/col/index",
+                "zan-icon": "../../zanUi/icon/index",
+                "zan-panel": "../../zanUi/panel/index",
+                "zan-cell-group": "../../zanUi/cell-group/index",
+                "zan-cell": "../../zanUi/cell/index",
+            },
+        };
+        data = {
+            id: 0,
+            order: null,
+        };
+        onLoad(params) {
+            wepy.setNavigationBarTitle({
+                title: '订单详情'
+            });
+            this.id = params.id;
+        };
+        async onShow() {
+            this.getOrder();
+        };
+        async getOrder() {
+            let res = await api.getOrder(this.id, { include: 'details' });
+            this.order = res.data;
+            this.$apply();
+        };
+        methods = {
+            pay() {
+                let that = this;
+                pay.store(this.order, {
+                    success(order) {
+                        that.getOrder();
+                    },
+                    error(order) {
+                        that.getOrder();
+                    }
+                });
+            },
+            async cancel() {
+                let res = await api.cancelOrder(this.order.id);
+                if(!res.error) {
+                    await wepy.showToast({
+                        title: '已取消'
+                    });
+                }
+                this.getOrder();
+            },
+            async receiving() {
+                let ret = await wepy.showModal({
+                    title: '提示',
+                    content: '请确认是否收到商品',
+                    confirmText: '已收到',
+                });
+                if(ret.confirm) {
+                    if(this.order.is_shipped) {
+                        let res = await api.receivingOrder(this.order.id);
+                        if(!res.error) {
+                            await wepy.showToast({
+                                title: '操作成功'
+                            });
+                        }
+                        this.getOrder();
+                    }
+                }
+            }
+        };
+    }
+</script>
+
+<style lang="scss" scoped>
+    @import '../../assets/sass/variable';
+    .status {
+        padding: 15px;
+        font-size: 13px;
+        background: linear-gradient(90deg, $color-warn, $color-danger);
+        color: #eee;
+        .name {
+            color: #fff;
+            font-size: 16px;
+            padding-bottom: 5px;
+        }
+    }
+    .address {
+        background: #fff;
+        padding: 15px;
+        line-height: 24px;
+        .icon {
+            text-align: center;
+            color: #666;
+        }
+        .name {
+            font-size: 16px;
+        }
+        .street {
+            color: $color-gray;
+        }
+    }
+    .total, .info {
+        background: #fff;
+        padding: 15px;
+        font-size: 12px;
+        color: #999;
+        .wg-flex {
+            line-height: 24px;
+            justify-content: space-between;
+            text:first-child {
+                width: 50%;
+            }
+        }
+        .amount {
+            font-size: 13px;
+            color: $color-warn;
+            background: #f7f7f7;
+            margin: 10px -15px -15px -15px;
+            padding: 15px;
+            border-top: 1px solid #eee;
+        }
+        margin-bottom: 10px;
+    }
+    .buttons {
+        background: #fff;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        border-top: 1px solid #ddd;
+        button {
+            width: 50%;
+        }
+    }
+</style>

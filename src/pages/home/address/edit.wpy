@@ -1,0 +1,145 @@
+
+<template>
+    <form @submit="submit">
+        <zan-panel title="收货人">
+            <zan-cell-group>
+                <zan-field title="姓名" placeholder="真实姓名" right name="name" value="{{ address.name }}"></zan-field>
+                <zan-field title="电话" placeholder="手机号码" right name="phone" value="{{ address.phone }}"></zan-field>
+            </zan-cell-group>
+        </zan-panel>
+        <zan-panel title="收货地址">
+            <zan-cell-group>
+                <zan-cell title="地区信息" is-link @tap="showDistricts">
+                    <text slot="footer" wx:if="{{ !province }}">选择 省/市/区</text>
+                    <text slot="footer" wx:else>{{ province.name }}/{{ city.name }}/{{ area.name }}</text>
+                </zan-cell>
+                <zan-cell title="详细地址">
+                    <input slot="footer" placeholder="街道门牌、楼层房间号等信息" name="street"  value="{{ address.street }}"/>
+                </zan-cell>
+            </zan-cell-group>
+        </zan-panel>
+        <view class="buttons {{ id > 0 ? 'wg-flex-middle' : ''}}">
+            <button class="wg-btn-danger large" @tap="destroy" wx:if="{{ id > 0 }}">删除</button>
+            <button formType="submit" class="wg-btn-primary large">保存</button>
+        </view>
+    </form>
+    <districts @selected.user="selectedDistricts"></districts>
+</template>
+
+<script>
+    import wepy from 'wepy';
+    import api from '@/api/api';
+    import Districts from '@/components/common/districts';
+
+    export default class AddressEdit extends wepy.page {
+        components = {
+            districts: Districts
+        };
+        config = {
+            usingComponents: {
+                "zan-panel": "../../../zanUi/panel/index",
+                "zan-cell": "../../../zanUi/cell/index",
+                "zan-cell-group": "../../../zanUi/cell-group/index",
+                "zan-field": "../../../zanUi/field/index",
+                "zan-popup": "../../../zanUi/popup/index",
+            },
+        };
+        data = {
+            id: 0,
+            address: {},
+            districts: null,
+            province: null,
+            city: null,
+            area: null,
+            sexArray: [{
+                    name: '先生',
+                    value: '1',
+                    checked: 'true'
+                },
+                {
+                    name: '女士',
+                    value: '2'
+                }
+            ]
+        };
+        onLoad(params) {
+            this.id = params.id;
+            wepy.setNavigationBarTitle({
+                title: this.id ? '地址编辑' : '添加地址'
+            });
+            this.setDefault();
+        };
+        async onShow() {
+            if (this.id) {
+                let res = await api.getAddress(this.id);
+                this.address = res.data;
+                this.province = this.address.province;
+                this.city = this.address.city;
+                this.area = this.address.area;
+            }
+            this.$apply();
+        };
+        setDefault() {
+            if (this.id == undefined) {
+                this.id = 0;
+            }
+            this.address = {
+                id: 0,
+                name: '',
+                sex: 1,
+                phone: '',
+                street: '',
+                province: null,
+                city: null,
+                area: null,
+                default: false
+            };
+        };
+        
+        methods = {
+            async submit(e) {
+                let form = e.detail.value;
+                form.province = this.province;
+                form.city = this.city;
+                form.area = this.area;
+                let res = await api.storeAddress(form);
+                if (!res.error) {
+                    wepy.showToast({
+                        title: '添加成功'
+                    });
+                    wepy.navigateBack()
+                }
+            },
+            async destroy() {
+                let res = await api.deleteAddress(this.id);
+                if(!res.error) {
+                    wepy.showToast({
+                        title: '已删除'
+                    });
+                    wepy.navigateBack();
+                }
+            },
+            showDistricts() {
+                this.$invoke('districts', 'show');
+            },
+            selectedDistricts(province, city, area) {
+                this.province = province;
+                this.city = city;
+                this.area = area;
+            },
+        };
+        
+    }
+</script>
+
+<style lang="scss" scoped>
+    .buttons {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
+    .wg-flex-middle button {
+        width: 50%
+    }
+</style>

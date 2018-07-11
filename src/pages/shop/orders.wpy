@@ -1,0 +1,65 @@
+<template>
+    <zan-search placeholder="输入商品名称/收件人姓名/手机号码" bindsearch="search" />
+    <zan-tab list="{{ types }}" selected-id="{{ type }}" bindtabchange="selectType" height="40" />
+</template>
+
+<script>
+    import wepy from 'wepy';
+    import api from '@/api/api';
+    export default class Orders extends wepy.page {
+        config = {
+            navigationBarTitleText: "我的订单",
+            usingComponents: {
+                "zan-tab": "../../zanUi/tab/index",
+                "zan-search": "../../zanUi/search/index",
+            }
+        };
+        data = {
+            orders: [],
+            type: 0,
+            page: 1,
+            total: 0,
+            lastPage: 1,
+            keywords: '',
+            types: [{
+                id: 0,
+                title: '全部'
+            }, {
+                id: 1,
+                title: '未付款'
+            }, {
+                id: 2,
+                title: '待收货'
+            }]
+        };
+        onShow() {
+            this.getOrders();
+        };
+        async getOrders() {
+            let res = await api.getOrders({
+                type: this.type,
+                page: this.page,
+                keywords: this.keywords
+            });
+            for (let item of res.data.data) {
+                this.orders.push(item);
+            }
+            this.lastPage = res.data.meta.pagination.total_pages;
+            this.total = res.data.meta.pagination.total;
+            this.$apply();
+        };
+        selectType(e) {
+            this.type = e.detail;
+            this.orders = [];
+            this.page = 1;
+            this.getOrders();
+        };
+        search(e) {
+            this.type = 0;
+            this.orders = [];
+            this.page = 1;
+            this.keywords = e.detail.value;
+            this.getOrders();
+        }
+    }
+</script>

@@ -1,14 +1,17 @@
 @import './variable';
+@import './icon';
+// @import url('http://at.alicdn.com/t/font_738033_f22xsncsfci.css');
+
 page {
     font-size: 14px;
     background: $color-light-gray;
 }
-.flex {
+.wg-flex {
     display: -webkit-flex;
     display: flex;
 }
-.flex-middle {
-    @extend .flex;
+.flex-middle, .wg-flex-middle {
+    @extend .wg-flex;
     flex-wrap: nowrap;
     align-items: center;
 }

@@ -1,42 +1,88 @@
 <template>
-    <view class="panel" wx:if="{{ carts && carts.length > 0}}">
-        <view class="panel-title">购物清单</view>
-        <view class="detailed-list">
-            <repeat for="{{ carts }}" key="id" index="index" item="item">
-                <view class="item">
-                    <view class="item-header">
-                        <zan-row>
-                            <zan-col col="18">
-                                <view class="title flex-middle">
-                                    <image src="{{ item.sku && item.sku.thumb ? item.sku.thumb : item.product.thumb }}" />
-                                    <view>
-                                        <view class="zan-ellipsis">{{ item.product.name }} </view>
-                                        <view wx:if="{{ item.sku }}" class="name wg-color-dark-gray">
-                                            <text wx:for="{{ item.sku.params }}" wx:for-item="param" wx:key="id">{{ param.param_name }} </text>
+    <block wx:if="{{ !isEmpty }}">
+        <view class="panel address">
+            <view class="panel-title">收货地址</view>
+            <zan-cell title="选择收货地址" is-link @tap="showAddresses" wx:if="{{ !address }}"></zan-cell>
+            <view wx:else class="wg-flex-middle panel-content" @tap="showAddresses">
+                <view style="width: 80%;">
+                    <view>{{ address.phone }} {{ address.name }} 收</view>
+                    <view class="zan-ellipsis">{{ address.address }} </view>
+                </view>
+                <view class="right">
+                    <text class="wg-icon wg-icon-right"></text>
+                </view>
+            </view>
+        </view>
+        <view class="panel">
+            <view class="panel-title">购物清单</view>
+            <view class="detailed-list">
+                <repeat for="{{ carts }}" key="id" index="index" item="item">
+                    <view class="item">
+                        <view class="item-header">
+                            <zan-row>
+                                <zan-col col="18">
+                                    <view class="title flex-middle">
+                                        <image src="{{ item.sku && item.sku.thumb ? item.sku.thumb : item.product.thumb }}" />
+                                        <view>
+                                            <view class="zan-ellipsis">{{ item.product.name }} </view>
+                                            <view wx:if="{{ item.sku }}" class="name wg-color-dark-gray">
+                                                <text wx:for="{{ item.sku.params }}" wx:for-item="param" wx:key="id">{{ param.param_name }} </text>
+                                            </view>
                                         </view>
                                     </view>
-                                </view>
-                            </zan-col>
-                            <zan-col col="6">
-                                <view class="price zan-pull-right">
-                                    <text class="zan-c-gray-dark">{{ item.num }} × </text><text class="zan-font-16 zan-c-red">{{ item.sku ? item.sku.price : item.product.price }}元</text>
-                                </view>
-                            </zan-col>
-                        </zan-row>
+                                </zan-col>
+                                <zan-col col="6">
+                                    <view class="price zan-pull-right">
+                                        <text class="zan-c-gray-dark">{{ item.num }} × </text><text class="zan-font-16 zan-c-red">{{ item.sku ? item.sku.price : item.product.price }}元</text>
+                                    </view>
+                                </zan-col>
+                            </zan-row>
+                        </view>
                     </view>
-                </view>
-            </repeat>
+                </repeat>
+            </view>
         </view>
-    </view>
+        <view class="panel">
+            <view class="panel-title">优惠/积分</view>
+            <zan-cell-group>
+                <zan-cell title="使用优惠券" is-link></zan-cell>
+                <zan-cell title="可用积分">
+                    <view slot="footer" >
+                        <text>1000积分</text>
+                        <text class="wg-icon wg-icon-help"></text>
+                    </view>
+                </zan-cell>
+            </zan-cell-group>
+        </view>
+        <view class="panel">
+            <zan-cell-group>
+                <zan-cell title="支付方式" value="微信支付"></zan-cell>
+                <zan-cell title="留言">
+                    <input type="text" slot="footer" placeholder="有什么要吩咐的吗~" />
+                </zan-cell>
+            </zan-cell-group>
+        </view>
+    </block>
     <placeholder :show.sync="isEmpty" message="亲，您是不是忘了买点什么了~" iconType="custome">
-        <navigator open-type="redirect" url="/pages/index"><button style="display: inline-block; margin: 20px;" class="wg-btn-danger radius">看看购物车</button></navigator>
+        <navigator open-type="redirect" url="/pages/shop/carts"><button style="display: inline-block; margin: 20px;" class="wg-btn-danger radius">看看购物车</button></navigator>
     </placeholder>
     <view class="wg-fill-block"></view>
+    <view class="buy-nav">
+        <zan-row>
+            <zan-col col="16">
+                <view class="price">合计：<text class="wg-color-danger">{{ total.price }}元</text></view>
+            </zan-col>
+            <zan-col col="8">
+                <button disabled="{{ total.num <= 0 }}" class="wg-btn-danger large" @tap="submit">提交订单</button>
+            </zan-col>
+        </zan-row>
+    </view>
 </template>
 
 <script>
     import wepy from 'wepy';
     import api from '@/api/api';
+    import pay from '@/utils/pay';
     import Placeholder from '@/components/common/placeholder';
     export default class Buy extends wepy.page {
         components = {
@@ -48,6 +94,9 @@
                 "zan-col": "../../zanUi/col/index",
                 "zan-icon": "../../zanUi/icon/index",
                 "zan-panel": "../../zanUi/panel/index",
+                "zan-field": "../../zanUi/field/index",
+                "zan-cell": "../../zanUi/cell/index",
+                "zan-cell-group": "../../zanUi/cell-group/index",
             },
         };
         data = {
@@ -56,7 +105,13 @@
             num: 0,
             cartIds: null,
             carts: null,
-            isEmpty: false
+            isEmpty: false,
+            address: null
+        };
+        computed = {
+            addressId() {
+                return wepy.getStorageSync('address_id');
+            }
         };
         onLoad(param) {
             wepy.setNavigationBarTitle({
@@ -70,7 +125,7 @@
             this.cartIds = param.carts;
         };
         async onShow() {
-            if ((this.skuId || this.productId) && !this.num) {
+            if ((this.skuId || this.productId) && !this.num || !this.cartIds) {
                 this.isEmpty = true;
                 return;
             }
@@ -115,8 +170,48 @@
                 });
                 this.carts = res.data.data;
             }
+            if(this.addressId) {
+                let res = await api.getAddress(this.addressId);
+                this.address = res.data;
+            }
             this.$apply();
-        }
+        };
+        methods = {
+            showAddresses() {
+                wepy.navigateTo({
+                    url: '/pages/home/address/index?type=select'
+                });
+            },
+            async submit() {
+                let data = {
+                    address_id: this.address.id,
+                    carts: this.cartIds ? this.cartIds.split(',') : null,
+                    payment_id: 1
+                };
+                if(this.productId) {
+                    data.product_id = this.productId;
+                }
+                if(this.skuId) {
+                    data.sku_id = this.skuId;
+                }
+                let res = await api.storeOrder(data);
+                if (!res.error) {
+                    pay.store(res.data, {
+                        success(order) {
+                            wepy.redirectTo({
+                                url: '/pages/shop/order?id=' + order.id
+                            });
+                        },
+                        error(order) {
+                            console.log(order);
+                            wepy.redirectTo({
+                                url: '/pages/shop/order?id=' + order.id
+                            });
+                        }
+                    });
+                }
+            }
+        };
     }
 </script>
 
@@ -128,6 +223,9 @@
             border-bottom: 1px solid #eee;
             padding: 15px;
             font-size: 16px;
+        }
+        .panel-content {
+            padding: 15px;
         }
         .detailed-list {
             margin: 0;
@@ -142,6 +240,26 @@
             .item:last-child {
                 border: none;
             }
+        }
+    }
+    .address {
+        .right {
+            width: 20%;
+            text-align: right;
+            color: #999;
+        }
+    }
+    .buy-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #fff;
+        line-height: 48px;
+        .price {
+            text-align: right;
+            padding-right: 20px;
+            font-size: 16px;
         }
     }
 </style>

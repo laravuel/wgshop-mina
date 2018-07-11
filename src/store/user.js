@@ -10,7 +10,7 @@ class User {
         if (this.data && !refresh) {
             return this.data;
         }
-        let res = await wepy.request('/user');
+        let res = await api.getUser();
         this.data = res.data;
         return this.data;
     };

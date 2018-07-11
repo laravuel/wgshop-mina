@@ -1,0 +1,46 @@
+<template>
+    <addresses></addresses>
+    <navigator url="/pages/home/address/edit">
+        <button class="wg-btn-primary large"><zan-icon type="edit"></zan-icon> 新增收货地址</button>
+    </navigator>
+</template>
+
+<script>
+    import wepy from 'wepy'
+    import Addresses from '@/components/addresses';
+    export default class AddressIndex extends wepy.page {
+        components = {
+            addresses: Addresses
+        };
+        config = {
+            usingComponents: {
+                "zan-icon": "../../../zanUi/icon/index",
+                "zan-row": "../../../zanUi/row/index",
+                "zan-col": "../../../zanUi/col/index",
+            },
+        };
+        data = {
+            rand: false,
+            type: null,
+        };
+        onLoad(params) {
+            wepy.setNavigationBarTitle({
+                title: '收货地址'
+            });
+            this.type = params.type ? params.type : null;
+            this.$invoke('addresses', 'setType', this.type);
+        }
+        
+        onShow() {
+        }
+    }
+</script>
+
+<style lang="scss" scoped>
+    .wg-btn-primary {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
+</style>

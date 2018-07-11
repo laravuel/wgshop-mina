@@ -16,6 +16,11 @@
                 'pages/shop/product',
                 'pages/shop/carts',
                 'pages/shop/buy',
+                'pages/shop/orders',
+                'pages/shop/order',
+
+                'pages/home/address/index',
+                'pages/home/address/edit',
                 
                 'pages/auth/login',
             ],
