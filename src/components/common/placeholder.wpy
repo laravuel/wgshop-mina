@@ -1,11 +1,6 @@
 <template>
     <view class="placeholder" wx:if="{{show}}">
-        <block wx:if="{{ iconType == 'image' }}">
-            <image class="icon-xl" src="{{ icon }}" mode="aspectFit" />
-        </block>
-        <block wx:else>
-            <slot name="icon"></slot>
-        </block>
+        <text class="wg-icon {{ icon }}"></text>
         <view class="txt">{{message}}</view>
         <slot></slot>
     </view>
@@ -16,31 +11,40 @@ export default class Placeholder extends wepy.component {
     props = {
         icon: {
             type: String,
-            default: '../../assets/images/logo.png'
+            default: 'wg-icon-non-data'
         },
         iconType: {
             type: String,
-            default: 'image'
+            default: 'font'
         },
         show: {
             type: Boolean,
             default: false
         },
         message: {
-            default: '没有相关信息'
+            default: '没有数据'
         }
     };
 }
 </script>
 <style lang="scss">
     .placeholder {
-        margin-top:150rpx;
+        margin-top: 150rpx;
         width: 100%;
         text-align: center;
-        text {
+        .txt {
             color: #666;
-            font-size: 40rpx;
-            margin-left: 30rpx;
+            font-size: 16px;
+            color: #888888;
+            margin-top: 36rpx;
+        }
+        .wg-icon {
+            font-size: 60px;
+            // padding: 20px;
+            // border-radius: 100%;
+            // background: #ddd;
+            color: #aaa;
+            display: inline-block;
         }
     }
     
@@ -49,11 +53,5 @@ export default class Placeholder extends wepy.component {
         height: 148rpx;
         display: block;
         margin: 0 auto;
-    }
-
-    .txt {
-        font-size: 26rpx;
-        color: #888888;
-        margin-top: 36rpx;
     }
 </style>

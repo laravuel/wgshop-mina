@@ -1,0 +1,102 @@
+<template>
+    <view class="home-header">
+        <zan-row>
+            <zan-col col="12" >
+                <view class="left wg-flex-middle">
+                    <view class="avatar"><image src="{{ user.avatar }}" /></view>
+                    <view class="name">{{ user.name }}</view>
+                </view>
+            </zan-col>
+            <zan-col col="12" class="right"></zan-col>
+        </zan-row>
+    </view>
+    <view class="orders">
+        <zan-panel>
+            <zan-cell title="我的订单" value="全部订单" is-link></zan-cell>
+            <view class="order-types">
+                <zan-row>
+                    <zan-col col="8"><text class="wg-icon wg-icon-daifukuan"></text><view>待付款</view></zan-col>
+                    <zan-col col="8"><text class="wg-icon wg-icon-daifahuo"></text><view>待发货</view></zan-col>
+                    <zan-col col="8"><text class="wg-icon wg-icon-daishouhuo"></text><view>待收货</view></zan-col>
+                </zan-row>
+            </view>
+        </zan-panel>
+    </view>
+
+    <view style="margin-top: 10px;">
+        <zan-panel>
+            <zan-cell-group>
+                <zan-cell title="优惠券" is-link url="/pages/home/coupons">
+                    <zan-icon type="coupon" slot="icon" style="color: red; font-size: 20px;"></zan-icon>
+                </zan-cell>
+                <zan-cell title="收货地址" is-link url="/pages/home/address/index">
+                    <text class="wg-icon wg-icon-dizhi" slot="icon" style="color: #409EFF; font-size: 20px;"></text>
+                </zan-cell>
+            </zan-cell-group>
+        </zan-panel>
+    </view>
+</template>
+<script>
+    import wepy from 'wepy';
+    import user from '@/store/user';
+    export default class Index extends wepy.page {
+        config = {
+            navigationBarTitleText: "个人中心",
+            navigationBarBackgroundColor: '#f85',
+            navigationBarTextStyle: 'light',
+            usingComponents: {
+                "zan-row": "../../zanUi/row/index",
+                "zan-col": "../../zanUi/col/index",
+                "zan-icon": "../../zanUi/icon/index",
+                "zan-panel": "../../zanUi/panel/index",
+                "zan-cell-group": "../../zanUi/cell-group/index",
+                "zan-cell": "../../zanUi/cell/index",
+            },
+        };
+        data = {
+            user: null
+        };
+        async onShow() {
+            this.user = await user.get();
+            this.$apply();
+        }
+    }
+</script>
+
+<style lang="scss" scoped>
+    @import '../../assets/sass/variable';
+    .home-header {
+        background: linear-gradient(180deg, $color-warn, $color-danger);
+        padding: 10px 20px 20px 20px;
+        .left {
+            color: #fff;
+            .avatar {
+                width: 70px;
+                height: 70px;
+                border-radius: 100%;
+                margin-right: 10px;
+                border: 2px solid #fff;
+                image {
+                    width: 100%;
+                    height: 100%;
+                    border-radius: 100%;
+                }
+            }
+            .name {
+                font-size: 16px;
+            }
+        }
+    }
+    .order-types {
+        text-align: center;
+        border-top: 1px solid #eee;
+        padding: 20px 0;
+        .wg-icon {
+            font-size: 30px;
+            color: #666;
+        }
+        view {
+            margin-top: 5px;
+        }
+    }
+</style>

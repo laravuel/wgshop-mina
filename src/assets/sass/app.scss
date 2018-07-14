@@ -15,6 +15,11 @@ page {
     flex-wrap: nowrap;
     align-items: center;
 }
+.wg-flex-between {
+    @extend .wg-flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+}
 .wg-fill-block {
     padding: 40px 0;
 }
@@ -42,16 +47,24 @@ page {
 
 .wg-btn {
     background-color: $color-light-gray;
-    font-size: 16px;
+    font-size: 14px;
     border-radius: 0;
     &.large {
         padding: 5px 0;
+        font-size: 16px;
     }
     &.small {
         padding: 0;
     }
     &.radius {
         border-radius: 3px;
+    }
+    &.inline {
+        display: inline;
+        padding: 8px 12px;
+    }
+    &.inline.large {
+        padding: 12px 15px;
     }
     &::after {
         border: none;

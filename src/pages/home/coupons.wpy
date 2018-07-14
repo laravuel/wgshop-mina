@@ -1,0 +1,200 @@
+<template>
+    <view id="top" class="coupons-tab zan-clearfix">
+        <view class="item {{ status == item.id ? 'item-active' : '' }}" wx:for="{{ navs }}" wx:key="id">{{ item.title }}</view>
+    </view>
+    <view class="coupons">
+        <scroll-view wx:if="{{ coupons }}" style="height: {{ height - 55 }}px;" scroll-y bindscrolltolower="loadMore">
+            <view class=" zan-clearfix item {{ item.expire ? 'item-over' : ''}} su-clear" wx:for="{{ coupons }}" wx:key="id">
+                <navigator url="{{ '/pages/home/coupon?id='+item.id }}" class="item-block item-left">
+                    <view class="item-block__content">
+                        <view class="item-left-number">{{ item.name }}<text>{{ item.value }}</text>{{ item.unit }}</view>
+                        <view class="item-left-des">使用限制：<text wx:if="{{ item.use_condition }}">满{{ item.use_condition }}可用</text><text wx:else>无限制</text></view>
+                        <view class="item-left-des">截止日期：{{ item.start_time || '不限' }} - {{ item.end_time || '不限' }}</view>
+                    </view>
+                </navigator>
+                <view class="item-block item-middle"></view>
+                <view class="item-block item-right">
+                    <block wx:if="{{ item.expire }}">
+                        <view class="item-right-text">已过期</view>
+                    </block>
+                    <block wx:else>
+                        <view class="item-right-button" @tap="use({{ item }})">去使用</view>
+                    </block>
+                </view>
+            </view>
+        </scroll-view>
+    </view>
+</template>
+
+<script>
+    import wepy from 'wepy';
+    import api from '@/api/api';
+    export default class Coupons extends wepy.page {
+        config = {
+            navigationBarTitleText: "我的优惠券",
+            navigationBarBackgroundColor: '#f2f2f2',
+            navigationBarTextStyle: 'black',
+            usingComponents: {
+                "zan-tab": "../../zanUi/tab/index",
+            },
+        };
+        data = {
+            coupons: null,
+            page: 1,
+            total: 0,
+            lastPage: 1,
+            status: 0,
+            navs: [{
+                id: 0,
+                title: '未使用'
+            }, {
+                id: 1,
+                title: '已使用/已过期'
+            }],
+        };
+        computed = {
+            isEmpty() {
+                return !this.coupons || !this.coupons.length;
+            },
+            height() {
+                let res = wx.getSystemInfoSync();
+                return res.windowHeight;
+            },
+        };
+        onShow() {
+            this.getCoupons();
+        };
+        loadMore() {
+            this.page++;
+            if (this.page <= this.lastPage) {
+                this.getCoupons();
+            }
+        };
+        async onPullDownRefresh() {
+            this.page = 1;
+            await this.getCoupons();
+            wepy.stopPullDownRefresh();
+        };
+        async getCoupons() {
+            this.loading = this.page == 1 ? false : true;
+            let res = await api.getUserCoupons({
+                _loading: this.page == 1 ? true : false,
+                data: {
+                    status: this.status,
+                    page: this.page,
+                }
+            });
+            this.loading = false;
+            this.coupons = this.page == 1 ? [] : this.coupons;
+            for (let item of res.data.data) {
+                this.coupons.push(item);
+            }
+            this.lastPage = res.data.meta.pagination.total_pages;
+            this.total = res.data.meta.pagination.total;
+            this.$apply();
+        }
+    }
+</script>
+
+
+<style lang="scss" scoped>
+    @import '../../assets/sass/variable';
+    .coupons-tab {
+        padding: 10px 0;
+        width: 88%;
+        margin: 0 auto;
+        .item {
+            width: 50%;
+            background: #fff;
+            float: left;
+            text-align: center;
+            padding: 8px 0;
+        }
+        .item:first-child {
+            border-radius: 5px 0 0 5px;
+        }
+        .item:last-child {
+            border-radius: 0 5px 5px 0;
+        }
+        .item-active {
+            background: $color-warn;
+            color: #fff;
+        }
+    }
+    .coupons {
+        .item {
+            margin: 0px 6% 10px 6%;
+        }
+        .item-block {
+            height: 105px;
+            float: left;
+            background: #fff;
+        }
+        .item-block__content {
+            padding: 10px 20px;
+        }
+        .item-left {
+            border-right: none;
+            border-radius: 5px 10px 10px 5px;
+            width: 67%;
+        }
+        .item-left-number {
+            color: #f60;
+        }
+        .item-left-number text {
+            font-size: 30px;
+        }
+        .item-left-des {
+            color: #999;
+        }
+        .item-left-des {
+            line-height: 22px;
+        }
+        .item-left-time {
+            color: #444;
+            font-size: 12px;
+        }
+        .item-right {
+            width: 33%;
+            border-left: none;
+            border-radius: 10px 5px 5px 10px;
+            position: relative;
+        }
+        .item-right:before {
+            content: ' ';
+            position: absolute;
+            height: 105px; // border-left: 1px dashed #eee;
+            width: 1px;
+        }
+        .item-right-button {
+            border: 1px solid #f60;
+            color: #f60;
+            border-radius: 45px;
+            padding: 3px;
+            text-align: center;
+            width: 50px;
+            margin: 38px auto;
+        }
+        .item-right-text {
+            text-align: center;
+            line-height: 105px;
+            color: #333;
+        }
+        .item-over .item-block {
+            background: #f7f7f7;
+        }
+        .item-over .item-right-text {
+            color: #666;
+        }
+        .item-right-credits {
+            text-align: center;
+            margin-top: 30px;
+            color: #6699FF;
+        }
+        .item-right-button--dh {
+            color: #6699FF;
+            border-color: #6699FF;
+            margin-top: 5px;
+        }
+    }
+</style>

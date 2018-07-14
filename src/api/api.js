@@ -8,7 +8,11 @@ const authorization = (code, data) => http.request(`/socials/mini_program/author
 // 支付
 const pay = (orderId, data = {}) => http.request(`/pay/${orderId}`, { method: 'POST', data: Object.assign(data, { type: 'mini_program' }) });
 
+// 分类
+const getCategories = (data) => http.request(`/shop/categories`, { data });
+
 // 商品
+const getProducts = (object) => http.request(`/shop/products`, object);
 const getProduct = (id, data) => http.request(`/shop/products/${id}`, { data });
 const getProductSku = (id, skuId, data) => http.request(`/shop/products/${id}/skus/${skuId}`, { data });
 
@@ -28,17 +32,24 @@ const updateAddress = (id, data) => http.request(`/user/addresses/${id}`, { meth
 const deleteAddress = (id) => http.request(`/user/addresses/${id}`, { method: 'DELETE' });
 
 // 订单
-const getOrders = (data) => http.request(`/shop/orders`, { data });
+const getOrders = (object) => http.request(`/shop/orders`, object);
 const getOrder = (id, data) => http.request(`/shop/orders/${id}`, { data });
 const storeOrder = (data) => http.request(`/shop/orders`, { method: 'POST', data });
 const updateOrder = (id, data) => http.request(`/shop/orders/${id}`, { method: 'PUT', data });
 const cancelOrder = (id) => http.request(`/shop/orders/${id}/cancel`, { method: 'POST' });
 const receivingOrder = (id) => http.request(`/shop/orders/${id}/receiving`, { method: 'POST' });
 
+// 优惠券
+const getUserCoupons = (object) => http.request(`/user/coupons`, object);
+const getUserCoupon = (id, data) => http.request(`/user/coupons/${id}`, { data });
+const getCoupons = (data) => http.request(`/shop/coupons`, { data });
+const getCoupon = (id, data) => http.request(`/shop/coupons/${id}`, { data });
+
 export default {
     getUser,
     authorization,
     pay,
+    getProducts,
     getProduct,
     getProductSku,
     getCartsCount,
@@ -57,5 +68,10 @@ export default {
     storeOrder,
     updateOrder,
     cancelOrder,
-    receivingOrder
+    receivingOrder,
+    getUserCoupons,
+    getUserCoupon,
+    getCoupons,
+    getCoupon,
+    getCategories
 }

@@ -114,6 +114,7 @@
             }
         };
         onLoad(param) {
+            console.log(param);
             wepy.setNavigationBarTitle({
                 title: '下单'
             });
@@ -125,7 +126,7 @@
             this.cartIds = param.carts;
         };
         async onShow() {
-            if ((this.skuId || this.productId) && !this.num || !this.cartIds) {
+            if ((this.skuId || this.productId) && !this.num && !this.cartIds) {
                 this.isEmpty = true;
                 return;
             }
@@ -185,15 +186,20 @@
             async submit() {
                 let data = {
                     address_id: this.address.id,
-                    carts: this.cartIds ? this.cartIds.split(',') : null,
                     payment_id: 1
                 };
+                
                 if(this.productId) {
                     data.product_id = this.productId;
+                    data.num = this.num;
+                    if(this.skuId) {
+                        data.sku_id = this.skuId;
+                    }
                 }
-                if(this.skuId) {
-                    data.sku_id = this.skuId;
+                else {
+                    data.carts = this.cartIds ? this.cartIds.split(',') : null;
                 }
+                
                 let res = await api.storeOrder(data);
                 if (!res.error) {
                     pay.store(res.data, {

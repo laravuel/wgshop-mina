@@ -1,4 +1,5 @@
 <style>
+    @import "plugins/wxParse/wxParse.wxss";
     @import 'zanUi/index.wxss';
     @import 'assets/sass/app';
 </style>
@@ -12,6 +13,7 @@
         config = {
             pages: [
                 'pages/index',
+                'pages/shop/categories',
                 'pages/shop/products',
                 'pages/shop/product',
                 'pages/shop/carts',
@@ -19,8 +21,11 @@
                 'pages/shop/orders',
                 'pages/shop/order',
 
+                'pages/home/index',
                 'pages/home/address/index',
                 'pages/home/address/edit',
+                'pages/home/coupons',
+                'pages/home/coupon',
                 
                 'pages/auth/login',
             ],
@@ -28,7 +33,8 @@
                 navigationBarBackgroundColor: '#fff',
                 navigationBarTextStyle: 'black',
                 navigationBarTitleText: 'WGShop',
-                backgroundColor: '#f7f7f7'
+                backgroundColor: '#f7f7f7',
+                enablePullDownRefresh: true,
             }
             
         };

@@ -1,12 +1,10 @@
 <template>
+    <import src="../../plugins/wxParse/wxParse.wxml"/>
     <block wx:if="{{ product }}">
         <view class="sliders">
             <swiper indicator-dots="{{true}}" interval="3000" id="swiper">
-                <swiper-item>
-                    <image src="http://s3.mogucdn.com/p2/170110/88391240_8b27jl45ldgg3g6cf0055226jig0k_640x960.png_468x468.jpg" mode="widthFix"></image>
-                </swiper-item>
-                <swiper-item>
-                    <image src="http://s3.mogucdn.com/p2/170110/88391240_8b27jl45ldgg3g6cf0055226jig0k_640x960.png_468x468.jpg" mode="widthFix"></image>
+                <swiper-item wx:for="{{ product.images }}" wx:key="index">
+                    <image src="{{ item }}" mode="widthFix"></image>
                 </swiper-item>
             </swiper>
         </view>
@@ -33,7 +31,7 @@
         <zan-tab list="{{ [{id: 1, title: '概述'}, {id: 2, title: '参数'}] }}" selected-id="{{ tabId }}" bindtabchange="handelTab" height="40" />
         <view class="detail" wx:if="{{ tabId == 1 }}">
             <zan-panel hide-border>
-                alsjflakjdsflds
+                <view class="wg-html"><template is="wxParse" data="{{ wxParseData:content.nodes }}"></template></view>
             </zan-panel>
         </view>
         <view class="attributes" wx:else>
@@ -97,10 +95,10 @@
 <script>
     import wepy from 'wepy';
     import api from '@/api/api';
+    import WxParse from '@/plugins/wxParse/wxParse';
+
     export default class Product extends wepy.page {
         config = {
-            navigationBarBackgroundColor: '#fff',
-            navigationBarTextStyle: 'black',
             usingComponents: {
                 "zan-cell": "../../zanUi/cell/index",
                 "zan-cell-group": "../../zanUi/cell-group/index",
@@ -150,8 +148,9 @@
         };
         async getProduct() {
             let res = await api.getProduct(this.id, {
-                include: 'attributes.values,specs.values,brand,skus.params,images'
+                include: 'attributes.values,specs.values,brand,skus.params,images,content'
             });
+            WxParse.wxParse('content', 'html', res.data.content, this);
             this.product = res.data;
             this.$apply();
         };
@@ -237,6 +236,9 @@
         }
     }
 </script>
+<style scoped>
+    @import '../../assets/wxss/html.wxss';
+</style>
 <style lang="scss">
     .buy-nav button {
         border-radius: 0;

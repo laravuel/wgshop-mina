@@ -1,0 +1,131 @@
+<template>
+    <view class="main-categories">
+        <scroll-view style="height: {{ height }}px" scroll-y >
+            <view class="item {{ activeIndex == index ? 'active' : '' }}" wx:for="{{ categories }}" wx:key="id" @tap="active({{ index }})">{{ item.name }}</view>
+        </scroll-view>
+    </view>
+    <view class="sub-categories">
+        <scroll-view style="height: {{ height }}px" scroll-y scroll-into-view="{{ scrollIntoView }}" scroll-with-animation>
+            <view class="content" wx:for="{{ categories }}" wx:key="id" id="category-{{ index }}">
+                <view class="title">{{ item.name }}</view>
+                <view class="items zan-clearfix">
+                    <navigator url="/pages/shop/products?category_id={{ item.id }}" class="item" wx:for="{{ item.children }}" wx:for-item="data" wx:key="{{ data.id }}">
+                        <image src="{{ data.icons.mobile.url }}"></image>
+                        <view class="name">{{ data.name }}</view>
+                    </navigator>
+                </view>
+            </view>
+        </scroll-view>
+    </view>
+</template>
+
+<script>
+    import wepy from 'wepy';
+    import api from '@/api/api';
+    export default class Categories extends wepy.page {
+        config = {
+            navigationBarTitleText: "商品分类",
+            navigationBarBackgroundColor: '#f2f2f2',
+            navigationBarTextStyle: 'black',
+        };
+        data = {
+            categories: null,
+            activeIndex: 0,
+            scrollIntoView: 'category-0',
+        };
+        computed = {
+            height() {
+                let res = wx.getSystemInfoSync();
+                return res.windowHeight;
+            },
+        };
+        onLoad() {
+            this.getCategories();
+        };
+        async getCategories() {
+            let res = await api.getCategories({
+                pid: -1,
+                tree: 1
+            });
+            this.categories = res.data.data;
+            this.$apply();
+        };
+        methods = {
+            active(index) {
+                this.activeIndex = index;
+                this.scrollIntoView = 'category-' + index;
+                this.$apply();
+            }
+        };
+    }
+</script>
+
+<style lang="scss" scoped>
+    .main-categories {
+        width: 25%;
+        float: left;
+        text-align: center;
+        background: #fff;
+        position: relative;
+        &::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 1px;
+            background: #f2f2f2;
+        }
+        .item {
+            padding: 15px 0;
+            color: #666;
+            font-size: 16px;
+            &.active {
+                color: #f85;
+                position: relative;
+                &::after {
+                    content: '';
+                    left: 0;
+                    top: 25%;
+                    bottom: 25%;
+                    position: absolute;
+                    width: 4px;
+                    background: #f85;
+                }
+            }
+        }
+    }
+    .sub-categories {
+        padding-left: 25%;
+        background: #fff;
+        .content {
+            padding: 15px;
+            .title {
+                text-align: center;
+                font-weight: bold;
+                padding: 10px 0;
+                font-size: 16px;
+            }
+            .items {
+                border-bottom: 1px dotted #eee;
+                &:last-child {
+                    border: none;
+                }
+            }
+            .item {
+                float: left;
+                width: 33%;
+                background: none;
+                text-align: center;
+                margin: 15px 0;
+                image {
+                    width: 70px;
+                    height: 70px;
+                }
+                .name {
+                    padding: 5px 0;
+                }
+            }
+        }
+    }
+</style>

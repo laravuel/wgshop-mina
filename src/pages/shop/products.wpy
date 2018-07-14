@@ -1,9 +1,131 @@
 <template>
-    products
+    <zan-search placeholder="夏季短裤" bindsearch="search" class="search"/>
+    <view class="products-nav wg-flex-between">
+        <view class="item">热销</view>
+        <view class="item">价格<text>^</text></view>
+        <view class="item">筛选<text class="wg-icon wg-icon-shaixuan"></text></view>
+    </view>
+    <view class="products zan-clearfix">
+        <view class="item" wx:for="{{ products }}" wx:key="id" @tap="to({{ item }})">
+            <view class="item-wrap">
+                <view class="thumb wg-flex-middle">
+                    <image src="{{ item.thumb }}" mode="widthFix"/>
+                </view>
+                <view class="content">
+                    <view class="name zan-ellipsis--l2">{{ item.name }}</view>
+                    <view class="price zan-font-16">￥{{ item.price }}</view>
+                </view>
+            </view>
+        </view>
+    </view>
 </template>
 <script>
     import wepy from 'wepy';
+    import api from '@/api/api';
     export default class Products extends wepy.page {
-        
+        config = {
+            navigationBarTitleText: "商品列表",
+            usingComponents: {
+                "zan-search": "../../zanUi/search/index",
+            },
+        };
+        data = {
+            loading: false,
+            products: [],
+            page: 1,
+            total: 0,
+            lastPage: 1,
+        };
+        onLoad() {
+
+        };
+        onShow() {
+            this.getProducts();
+        };
+        async getProducts() {
+            this.loading = this.page == 1 ? false : true;
+            let res = await api.getProducts({
+                _loading: this.page == 1 ? true: false,
+                data: {
+                    page: this.page,
+                }
+            });
+            this.loading = false;
+            this.products = this.page == 1 ? [] : this.products;
+            for (let item of res.data.data) {
+                this.products.push(item);
+            }
+            this.lastPage = res.data.meta.pagination.total_pages;
+            this.total = res.data.meta.pagination.total;
+            this.$apply();
+        };
+        methods = {
+            to(item) {
+                wepy.navigateTo({
+                    url: '/pages/shop/product?id=' + item.id
+                });
+            }
+        };
     }
 </script>
+
+<style lang="scss" scoped>
+    @import '../../assets/sass/variable';
+    .products-nav {
+        background: #fff;
+        border-bottom: 1px solid #ddd;
+        margin-bottom: 5px;
+        .item {
+            width: 33%;
+            padding: 12px 0;
+            text-align: center;
+            position: relative;
+            &:after {
+                content: '';
+                position: absolute;
+                right: 0;
+                top: 30%;
+                bottom: 30%;
+                width: 1px;
+                background: #ddd;
+            }
+            &:last-child:after {
+                width: 0;
+            }
+        }
+    }
+    .products {
+        .item {
+            float: left;
+            width: 50%;
+            .item-wrap {
+                background: #fff;
+                margin-top: 0.12rem;
+            }
+            &:nth-child(2n) {
+                .item-wrap {
+                    margin-left: 0.12rem;
+                }
+            }
+            .thumb {
+                width: 10rem;
+                height: 10rem;
+                text-align: center;
+                image {
+                    width: 100%;
+                    height: auto;
+                }
+            }
+            .content {
+                padding: 10px;
+                .name {
+                    height: 40px;
+                }
+                .price {
+                    padding-top: 10px;
+                    color: $color-danger;
+                }
+            }
+        }
+    }
+</style>

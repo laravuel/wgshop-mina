@@ -1,20 +1,82 @@
 <template>
-    <zan-search placeholder="输入商品名称/收件人姓名/手机号码" bindsearch="search" />
-    <zan-tab list="{{ types }}" selected-id="{{ type }}" bindtabchange="selectType" height="40" />
+    <view id="top">
+        <zan-search placeholder="输入商品名称/收件人姓名/手机号码" bindsearch="search" />
+        <zan-tab list="{{ types }}" selected-id="{{ type }}" bindtabchange="selectType" height="40" />
+    </view>
+    <scroll-view style="height: {{ height - topHeight }}px" scroll-y @scrolltolower="loadMore" wx:if="{{ !isEmpty }}">
+        <view class="detailed-list orders">
+            <view class="order-item" wx:for="{{ orders }}" wx:key="id"  wx:for-index="index" wx:for-item="order">
+                <view class="order-header wg-flex-between" @tap="to({{ order.id }})">
+                    <text>{{ order.created_at }}</text>
+                    <text class="wg-color-warn zan-font-16">{{ order.status_name }}</text>
+                </view>
+                <view class="products" @tap="to({{ order.id }})">
+                    <view class="item" wx:for="{{ order.details.data }}" wx:key="{{ item.id }}">
+                        <view class="item-header">
+                            <zan-row>
+                                <zan-col col="18">
+                                    <view class="title flex-middle">
+                                        <image src="{{ item.thumb }}" />
+                                        <view>
+                                            <view class="zan-ellipsis">{{ item.name }} </view>
+                                            <view class="name wg-color-dark-gray">
+                                                {{ item.params }}
+                                            </view>
+                                        </view>
+                                    </view>
+                                </zan-col>
+                                <zan-col col="6">
+                                    <view class="price zan-pull-right">
+                                        <view class="wg-color-gray">￥<text class="zan-font-18">{{ item.price }}</text></view>
+                                        <view class="zan-c-gray-dark">×{{ item.num }}</view>
+                                    </view>
+                                </zan-col>
+                            </zan-row>
+                        </view>
+                    </view>
+                </view>
+                <view class="order-footer">
+                    <view class="icon"><text></text></view>
+                    <view>
+                        共{{ order.total_num }}件商品 {{ order.paid ? '实付' : '应付' }}：￥<text class="wg-color-gray zan-font-20">{{ order.paid ? order.pay_money : order.amount }}</text>
+                        <block wx:if="{{ !order.paid && !order.is_cancel }}">
+                            <button class="wg-btn radius inline" @tap="cancel({{ index }})">取消订单</button>
+                            <button class="wg-btn-danger radius inline" @tap="pay({{ index }})">微信支付</button>
+                        </block>
+                        <block wx:elif="{{ !order.is_cancel && order.is_shipped }}">
+                            <button class="wg-btn--danger radius inline" @tap="receiving({{ index }})">确认收货</button>
+                        </block>
+                    </view>
+                </view>
+            </view>
+        </view>
+    </scroll-view>
+    <loadMore :show.sync="loading"></loadMore>
+    <placeholder :show.sync="isEmpty" message="咱是不是还差点什么？" icon="wg-icon-non-order"></placeholder>
 </template>
 
 <script>
     import wepy from 'wepy';
     import api from '@/api/api';
+    import Placeholder from '@/components/common/placeholder';
+    import LoadMore from '@/components/common/loadMore';
+
     export default class Orders extends wepy.page {
+        components = {
+            placeholder: Placeholder,
+            loadMore: LoadMore,
+        };
         config = {
             navigationBarTitleText: "我的订单",
             usingComponents: {
+                "zan-row": "../../zanUi/row/index",
+                "zan-col": "../../zanUi/col/index",
                 "zan-tab": "../../zanUi/tab/index",
                 "zan-search": "../../zanUi/search/index",
             }
         };
         data = {
+            loading: false,
             orders: [],
             type: 0,
             page: 1,
@@ -30,17 +92,52 @@
             }, {
                 id: 2,
                 title: '待收货'
-            }]
+            }],
+            topHeight: 0,
         };
-        onShow() {
+        computed = {
+            isEmpty() {
+                return !this.orders || !this.orders.length;
+            },
+            height() {
+                let res = wx.getSystemInfoSync();
+                return res.windowHeight;
+            },
+        };
+        onLoad() {
             this.getOrders();
         };
-        async getOrders() {
-            let res = await api.getOrders({
-                type: this.type,
-                page: this.page,
-                keywords: this.keywords
+        onShow() {
+            let that = this;
+            wepy.createSelectorQuery().select('#top').boundingClientRect().exec(res => {
+                that.topHeight = res[0].height;
+                that.$apply();
             });
+        }
+        loadMore() {
+            this.page++;
+            if (this.page <= this.lastPage) {
+                this.getOrders();
+            }
+        };
+        async onPullDownRefresh() {
+            this.page = 1;
+            await this.getOrders();
+            wepy.stopPullDownRefresh();
+        };
+        async getOrders() {
+            this.loading = this.page == 1 ? false : true;
+            let res = await api.getOrders({
+                _loading: this.page == 1 ? true: false,
+                data: {
+                    type: this.type,
+                    page: this.page,
+                    keywords: this.keywords,
+                    include: 'details'
+                }
+            });
+            this.loading = false;
+            this.orders = this.page == 1 ? [] : this.orders;
             for (let item of res.data.data) {
                 this.orders.push(item);
             }
@@ -50,16 +147,130 @@
         };
         selectType(e) {
             this.type = e.detail;
-            this.orders = [];
             this.page = 1;
+            this.keywords = '';
             this.getOrders();
         };
         search(e) {
             this.type = 0;
-            this.orders = [];
             this.page = 1;
             this.keywords = e.detail.value;
             this.getOrders();
-        }
+        };
+        methods = {
+            to(id) {
+                wepy.navigateTo({
+                    url: '/pages/shop/order?id=' + id
+                });
+            },
+            pay(index) {
+                let order = this.orders[index];
+                let that = this;
+                pay.store(this.order, {
+                    success(order) {
+                        this.orders.splice(index, 1, order);
+                        this.$apply();
+                    },
+                    error(order) {
+                    }
+                });
+            },
+            async cancel(index) {
+                let ret = await wepy.showModal({
+                    title: '提示',
+                    content: '确定要取消该订单吗？',
+                });
+                if(ret.confirm) {
+                    let order = this.orders[index];
+                    let res = await api.cancelOrder(order.id);
+                    if(!res.error) {
+                        await wepy.showToast({
+                            title: '已取消'
+                        });
+                        let data = res.data;
+                        data.details = order.details;
+                        this.orders.splice(index, 1, data);
+                        this.$apply();
+                    }
+                }
+            },
+            async receiving() {
+                let order = this.orders[index];
+                let ret = await wepy.showModal({
+                    title: '提示',
+                    content: '请确认是否收到商品',
+                    confirmText: '已收到',
+                });
+                if(ret.confirm) {
+                    if(order.is_shipped) {
+                        let res = await api.receivingOrder(order.id);
+                        if(!res.error) {
+                            await wepy.showToast({
+                                title: '操作成功'
+                            });
+                            let data = res.data;
+                            data.details = order.details;
+                            this.orders.splice(index, 1, data);
+                            this.$apply();
+                        }
+                    }
+                }
+            }
+        };
     }
 </script>
+
+<style lang="scss" scoped>
+    .orders {
+        .order-item {
+            background: #fff;
+            margin-top: 10px;
+            .order-header {
+                padding: 15px;
+                color: #999;
+            }
+            .item-header {
+                line-height: 26px;
+                image {
+                    width: 40px;
+                    height: 50px;
+                }
+            }
+            .price {
+                line-height: 26px;
+            }
+            .order-footer {
+                padding: 10px;
+                border-top: 1px solid #eee;
+                text-align: right;
+                position: relative;
+                button {
+                    margin-left: 10px;
+                }
+                .icon {
+                    display: block; 
+                    width: 0; 
+                    height: 0; 
+                    border-width: 0 10px 10px; 
+                    border-style: solid; 
+                    border-color: transparent transparent #ddd; 
+                    position: absolute; 
+                    top: -10px; 
+                    left: 90%;/* 三角形居中显示 */
+                    margin-left: -10px;/* 三角形居中显示 */
+                    text {
+                        display: block; 
+                        width: 0; 
+                        height: 0; 
+                        border-width: 0 10px 10px; 
+                        border-style: solid; 
+                        border-color: transparent transparent #fff; 
+                        position: absolute; 
+                        top: 1px; 
+                        left: -10px;
+                    }
+                }
+            }
+        }
+    }
+</style>
