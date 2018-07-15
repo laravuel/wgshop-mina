@@ -1,28 +1,51 @@
 <template>
-    <zan-search placeholder="夏季短裤" bindsearch="search" class="search"/>
-    <view class="products-nav wg-flex-between">
-        <view class="item">热销</view>
-        <view class="item">价格<text>^</text></view>
-        <view class="item">筛选<text class="wg-icon wg-icon-shaixuan"></text></view>
-    </view>
-    <view class="products zan-clearfix">
-        <view class="item" wx:for="{{ products }}" wx:key="id" @tap="to({{ item }})">
-            <view class="item-wrap">
-                <view class="thumb wg-flex-middle">
-                    <image src="{{ item.thumb }}" mode="widthFix"/>
-                </view>
-                <view class="content">
-                    <view class="name zan-ellipsis--l2">{{ item.name }}</view>
-                    <view class="price zan-font-16">￥{{ item.price }}</view>
+    <view id="top">
+        <view class="search">
+            <view class="search-form wg-flex-middle">
+                <text class="wg-icon wg-icon-search"></text><input type="text" placeholder="夏季 短裤" value="{{ keywords }}" @input="inputKeywords" confirm-type="搜索" @confirm="search"/><text class="wg-icon wg-icon-delete" wx:if="{{ keywords }}" @tap="clear"></text>
+            </view>
+        </view>
+        <view class="products-nav wg-flex-between">
+            <view class="item {{ type == 'sales' ? 'active' : '' }}" @tap="sort('sales')">热销</view>
+            <view class="item {{ type == 'created_at' ? 'active' : '' }}" @tap="sort('created_at')">上新</view>
+            <view class="item price wg-flex-middle {{ type == 'price' ? 'active' : '' }}" @tap="sort('price')">
+                <text>价格</text>
+                <view class="order">
+                    <view class="wg-icon wg-icon-paixu-top {{ order == 'asc' ? 'active' : '' }}"></view>
+                    <view class="wg-icon wg-icon-paixu-down {{ order == 'desc' ? 'active' : '' }}"></view>
                 </view>
             </view>
         </view>
     </view>
+    <scroll-view style="height: {{ height - topHeight - 4 }}px" scroll-y @scrolltolower="loadMore" wx:if="{{ !isEmpty }}">
+        <view class="products zan-clearfix">
+            <view class="item" wx:for="{{ products }}" wx:key="id" @tap="to({{ item }})">
+                <view class="item-wrap">
+                    <view class="thumb wg-flex-middle">
+                        <image src="{{ item.thumb }}" mode="widthFix"/>
+                    </view>
+                    <view class="content">
+                        <view class="name zan-ellipsis--l2">{{ item.name }}</view>
+                        <view class="price zan-font-16">￥{{ item.price }}</view>
+                    </view>
+                </view>
+            </view>
+        </view>
+    </scroll-view>
+    <loadMore :show.sync="loading"></loadMore>
+    <placeholder :show.sync="isEmpty" message="掌柜还没上新奥~"></placeholder>
 </template>
 <script>
     import wepy from 'wepy';
     import api from '@/api/api';
+    import Placeholder from '@/components/common/placeholder';
+    import LoadMore from '@/components/common/loadMore';
+
     export default class Products extends wepy.page {
+        components = {
+            placeholder: Placeholder,
+            loadMore: LoadMore,
+        };
         config = {
             navigationBarTitleText: "商品列表",
             usingComponents: {
@@ -35,19 +58,53 @@
             page: 1,
             total: 0,
             lastPage: 1,
+            keywords: '',
+            type: 'sales',
+            order: null,
+            topHeight: 0,
+            categoryId: 0,
         };
-        onLoad() {
-
+        computed = {
+            isEmpty() {
+                return !this.products || !this.products.length;
+            },
+            height() {
+                let res = wx.getSystemInfoSync();
+                return res.windowHeight;
+            },
+        };
+        onLoad(params) {
+            this.categoryId = params.category_id;
+            this.getProducts();
         };
         onShow() {
-            this.getProducts();
+            let that = this;
+            wepy.createSelectorQuery().select('#top').boundingClientRect().exec(res => {
+                that.topHeight = res[0].height;
+                that.$apply();
+            });
+        };
+        async onPullDownRefresh() {
+            this.page = 1;
+            await this.getProducts();
+            wepy.stopPullDownRefresh();
+        };
+        loadMore() {
+            this.page++;
+            if (this.page <= this.lastPage) {
+                this.getProducts();
+            }
         };
         async getProducts() {
             this.loading = this.page == 1 ? false : true;
             let res = await api.getProducts({
                 _loading: this.page == 1 ? true: false,
                 data: {
+                    category_id: this.categoryId,
                     page: this.page,
+                    keywords: this.keywords,
+                    sort: this.type,
+                    order: this.order
                 }
             });
             this.loading = false;
@@ -59,11 +116,38 @@
             this.total = res.data.meta.pagination.total;
             this.$apply();
         };
+        search() {
+            this.page = 1;
+            this.getProducts();
+        };
+        clear() {
+            this.keywords = '';
+            this.search();
+        }
         methods = {
             to(item) {
                 wepy.navigateTo({
                     url: '/pages/shop/product?id=' + item.id
                 });
+            },
+            inputKeywords(e) {
+                this.keywords = e.detail.value;
+            },
+            sort(type) {
+                this.type = type;
+                this.page = 1;
+                if(this.type == 'price') {
+                    if(!this.order || this.order == 'desc') {
+                        this.order = 'asc';
+                    }
+                    else if(this.order == 'asc') {
+                        this.order = 'desc';
+                    }
+                }
+                else {
+                    this.order = null;
+                }
+                this.getProducts();
             }
         };
     }
@@ -71,15 +155,39 @@
 
 <style lang="scss" scoped>
     @import '../../assets/sass/variable';
+    .search {
+        background: #fff;
+        padding: 10px 20px;
+        .search-form {
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 0.4rem;
+            input {
+                display: inline-block;
+                width: 100%;
+                padding-left: 5px;
+            }
+            .wg-icon {
+                color: #666;
+            }
+        }
+    }
     .products-nav {
         background: #fff;
-        border-bottom: 1px solid #ddd;
         margin-bottom: 5px;
         .item {
             width: 33%;
             padding: 12px 0;
             text-align: center;
             position: relative;
+            color: #333;
+            .wg-icon {
+                font-size: 12px;
+                margin-left: 5px;
+            }
+            &.active {
+                color: $color-danger;
+            }
             &:after {
                 content: '';
                 position: absolute;
@@ -92,6 +200,19 @@
             &:last-child:after {
                 width: 0;
             }
+            &.price {
+                .order {
+                    color: #666;
+                    .active {
+                        color: $color-danger;
+                    }
+                }
+                justify-content: center;
+                .wg-icon {
+                    font-size: 8px;
+                }
+            }
+            
         }
     }
     .products {
@@ -100,11 +221,15 @@
             width: 50%;
             .item-wrap {
                 background: #fff;
-                margin-top: 0.12rem;
+                margin-bottom: 0.3rem;
+            }
+            &:nth-child(2n-1) {
+                margin-left: -0.1rem;
             }
             &:nth-child(2n) {
+                margin-left: 0.1rem;
                 .item-wrap {
-                    margin-left: 0.12rem;
+                    margin-left: 0.2rem;
                 }
             }
             .thumb {
@@ -113,7 +238,7 @@
                 text-align: center;
                 image {
                     width: 100%;
-                    height: auto;
+                    height: 100%;
                 }
             }
             .content {

@@ -9,7 +9,7 @@
             <view class="content" wx:for="{{ categories }}" wx:key="id" id="category-{{ index }}">
                 <view class="title">{{ item.name }}</view>
                 <view class="items zan-clearfix">
-                    <navigator url="/pages/shop/products?category_id={{ item.id }}" class="item" wx:for="{{ item.children }}" wx:for-item="data" wx:key="{{ data.id }}">
+                    <navigator url="/pages/shop/products?category_id={{ data.id }}" class="item" wx:for="{{ item.children }}" wx:for-item="data" wx:key="{{ data.id }}">
                         <image src="{{ data.icons.mobile.url }}"></image>
                         <view class="name">{{ data.name }}</view>
                     </navigator>

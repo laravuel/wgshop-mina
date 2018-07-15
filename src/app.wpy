@@ -20,6 +20,7 @@
                 'pages/shop/buy',
                 'pages/shop/orders',
                 'pages/shop/order',
+                'pages/shop/coupons',
 
                 'pages/home/index',
                 'pages/home/address/index',
