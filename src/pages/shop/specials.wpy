@@ -1,0 +1,109 @@
+<template>
+    <scroll-view style="height: {{ height }}px;" scroll-y bindscrolltolower="loadMore" wx:if="{{ !isEmpty }}">
+        <view class="specials">
+            <navigator class="item" wx:for="{{ specials }}" wx:key="id" url="/pages/shop/special?id={{ item.id }}">
+                <view class="banner">
+                    <image src="{{ item.banner }}" mode="widthFix"/>
+                </view>
+                <view class="content">
+                    <view class="title">{{ item.name }}</view>
+                    <view class="des">{{ item.description }}</view>
+                </view>
+            </navigator>
+        </view>
+    </scroll-view>
+    <loadMore :show.sync="loading"></loadMore>
+    <placeholder :show.sync="isEmpty" message="什么都没有奥~"></placeholder>
+</template>
+
+<script>
+    import wepy from 'wepy';
+    import api from '@/api/api';
+    import Placeholder from '@/components/common/placeholder';
+    import LoadMore from '@/components/common/loadMore';
+
+    export default class Specials extends wepy.page {
+        components = {
+            placeholder: Placeholder,
+            loadMore: LoadMore,
+        };
+        config = {
+            navigationBarTitleText: "专场",
+            navigationBarBackgroundColor: '#f2f2f2',
+            navigationBarTextStyle: 'black',
+        };
+        data = {
+            loading: false,
+            specials: null,
+            page: 1,
+            total: 0,
+            lastPage: 1,
+        };
+        computed = {
+            isEmpty() {
+                return !this.specials || !this.specials.length;
+            },
+            height() {
+                let res = wx.getSystemInfoSync();
+                return res.windowHeight;
+            },
+        };
+        onLoad() {
+            this.getSpecials();
+        };
+        loadMore() {
+            this.page++;
+            if (this.page <= this.lastPage) {
+                this.getSpecials();
+            }
+        };
+        async getSpecials() {
+            this.loading = this.page == 1 ? false : true;
+            let res = await api.getSpecials({
+                _loading: this.page == 1 ? true : false,
+                data: {
+                    page: this.page,
+                }
+            });
+            this.loading = false;
+            this.specials = this.page == 1 ? [] : this.specials;
+            for (let item of res.data.data) {
+                this.specials.push(item);
+            }
+            this.lastPage = res.data.meta.pagination.total_pages;
+            this.total = res.data.meta.pagination.total;
+            this.$apply();
+        }
+    }
+</script>
+
+<style lang="scss" scoped>
+    .specials {
+        padding-top: 20px;
+        .item {
+            background: #fff;
+            margin: 0 15px 15px 15px;
+            border-radius: 5px;
+            .banner {
+                width: 100%;
+                max-height: 200px;
+                overflow: hidden;
+                image {
+                    width: 100%;
+                    height: auto;
+                    border-radius: 5px 5px 0 0;
+                }
+            }
+            .content {
+                padding: 10px 15px;
+                .title {
+                    font-size: 16px;
+                    padding-bottom: 5px;
+                }
+                .des {
+                    color: #999;
+                }
+            }
+        }
+    }
+</style>

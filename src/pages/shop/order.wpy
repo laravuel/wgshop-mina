@@ -42,7 +42,7 @@
                 <view class="item-header">
                     <zan-row>
                         <zan-col col="18">
-                            <view class="title flex-middle">
+                            <view class="title">
                                 <image src="{{ item.thumb }}" />
                                 <view>
                                     <view class="zan-ellipsis">{{ item.name }} </view>
@@ -67,6 +67,10 @@
             <view class="wg-flex">
                 <text>订单金额：</text>
                 <text>￥{{ order.total_price }}</text>
+            </view>
+            <view class="wg-flex" wx:if="{{ order.userCoupon }}">
+                <text>优惠券：</text>
+                <text>- {{ order.userCoupon.value }}{{ order.userCoupon.unit }}<text wx:if="{{ order.userCoupon.products }}">（部分商品）</text></text>
             </view>
             <view class="wg-flex">
                 <text>运费：</text>
@@ -132,7 +136,7 @@
             this.getOrder();
         };
         async getOrder() {
-            let res = await api.getOrder(this.id, { include: 'details' });
+            let res = await api.getOrder(this.id, { include: 'details,userCoupon' });
             this.order = res.data;
             this.$apply();
         };

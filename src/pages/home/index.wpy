@@ -12,12 +12,12 @@
     </view>
     <view class="orders">
         <zan-panel>
-            <zan-cell title="我的订单" value="全部订单" is-link></zan-cell>
+            <zan-cell title="我的订单" value="全部订单" is-link url="/pages/shop/orders"></zan-cell>
             <view class="order-types">
                 <zan-row>
-                    <zan-col col="8"><text class="wg-icon wg-icon-daifukuan"></text><view>待付款</view></zan-col>
-                    <zan-col col="8"><text class="wg-icon wg-icon-daifahuo"></text><view>待发货</view></zan-col>
-                    <zan-col col="8"><text class="wg-icon wg-icon-daishouhuo"></text><view>待收货</view></zan-col>
+                    <zan-col col="8"><navigator url="/pages/shop/orders?type=1"><text class="wg-icon wg-icon-daifukuan"></text><view>待付款</view></navigator></zan-col>
+                    <zan-col col="8"><navigator url="/pages/shop/orders?type=2"><text class="wg-icon wg-icon-daifahuo"></text><view>待发货</view></navigator></zan-col>
+                    <zan-col col="8"><navigator url="/pages/shop/orders?type=3"><text class="wg-icon wg-icon-daishouhuo"></text><view>待收货</view></navigator></zan-col>
                 </zan-row>
             </view>
         </zan-panel>
@@ -34,6 +34,11 @@
                 </zan-cell>
             </zan-cell-group>
         </zan-panel>
+    </view>
+
+    <view class="wg-copyright">
+        <view>Powered by <text class="name">wgShop</text></view>
+        <view>由 <text class="name">微极客</text> 提供技术支持</view>
     </view>
 </template>
 <script>

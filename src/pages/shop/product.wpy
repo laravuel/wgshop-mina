@@ -1,6 +1,6 @@
 <template>
     <import src="../../plugins/wxParse/wxParse.wxml"/>
-    <block wx:if="{{ product }}">
+    <view wx:if="{{ product }}">
         <view class="sliders">
             <swiper indicator-dots="{{true}}" interval="3000" id="swiper">
                 <swiper-item wx:for="{{ product.images }}" wx:key="index">
@@ -11,13 +11,19 @@
         <view class="title-cell">
             <view class="title zan-font-18">{{ product.name }}</view>
             <view class="description">{{ product.description || '' }}</view>
-            <view class="price zan-font-18">{{ product.price }}元</view>
+            <view class="price zan-font-18">￥{{ product.price }}</view>
         </view>
         <view class="panel">
             <zan-panel hide-border>
                 <zan-cell-group>
-                    <zan-cell title="领券" value="有优惠券可领取" is-link url="/pages/shop/coupons"></zan-cell>
-                    <zan-cell title="促销" is-link></zan-cell>
+                    <zan-cell title="领券" is-link url="/pages/shop/coupons">
+                        <text class="wg-icon wg-icon-youhuiquan" slot="icon"></text>
+                        <view slot="footer" wx:if="{{ product.couponsCount }}">有 <text class="wg-color-danger">{{ product.couponsCount }}</text> 张优惠券，赶快领取!!!!</view>
+                        <view slot="footer" wx:else>暂无可用优惠券~</view>
+                    </zan-cell>
+                    <zan-cell title="促销">
+                        <text class="wg-icon wg-icon-cuxiao" slot="icon"></text>
+                    </zan-cell>
                 </zan-cell-group>
             </zan-panel>
         </view>
@@ -28,7 +34,7 @@
                 </zan-cell>
             </zan-panel>
         </view>
-        <zan-tab list="{{ [{id: 1, title: '概述'}, {id: 2, title: '参数'}] }}" selected-id="{{ tabId }}" bindtabchange="handelTab" height="40" />
+        <zan-tab list="{{ [{id: 1, title: '商品详情'}, {id: 2, title: '商品属性'}] }}" selected-id="{{ tabId }}" bindtabchange="handelTab" height="40" />
         <view class="detail" wx:if="{{ tabId == 1 }}">
             <zan-panel hide-border>
                 <view class="wg-html"><template is="wxParse" data="{{ wxParseData:content.nodes }}"></template></view>
@@ -36,10 +42,20 @@
         </view>
         <view class="attributes" wx:else>
             <zan-panel hide-border>
-                123
+                <view class="item zan-clearfix" wx:for="{{ product.attributes.data }}">
+                    <view>{{ item.name }}</view>
+                    <view>
+                        <block wx:if="{{ item.values }}">
+                            <text wx:for="{{ item.values }}" wx:key="{{ param.id }}" wx:for-item="param">{{ param.name }}，</text>
+                        </block>
+                        <block wx:else>
+                            {{ item.value }}
+                        </block>
+                    </view>
+                </view>
             </zan-panel>
         </view>
-    </block>
+    </view>
     <view class="buy-nav">
         <zan-row>
             <zan-col col="4" class="nav-icon">
@@ -148,9 +164,9 @@
         };
         async getProduct() {
             let res = await api.getProduct(this.id, {
-                include: 'attributes.values,specs.values,brand,skus.params,images,content'
+                include: 'attributes.values,specs.values,brand,skus.params,images,content,couponsCount'
             });
-            WxParse.wxParse('content', 'html', res.data.content, this);
+            if(res.data.content) WxParse.wxParse('content', 'html', res.data.content, this);
             this.product = res.data;
             this.$apply();
         };
@@ -252,6 +268,14 @@
 </style>
 <style lang="scss" scoped>
     @import '../../assets/sass/variable';
+    .wg-icon-youhuiquan {
+        color: $color-danger;
+        font-size: 20px;
+    }
+    .wg-icon-cuxiao {
+        color: $color-primary;
+        font-size: 20px;
+    }
     .sliders {
         max-height: 400px;
         text-align: center;
@@ -279,6 +303,7 @@
         }
         .price {
             color: $color-danger;
+            font-weight: bold;
         }
     }
     .detail {
@@ -288,6 +313,18 @@
     .attributes {
         padding: 10px;
         background: #fff;
+        .item {
+            padding: 10px;
+        }
+        .item view:first-child {
+            float: left;
+            width: 80px;
+            color: #999;
+        }
+        .item view:last-child {
+            padding-left: 90px;
+            color: #444;
+        }
     }
     .buy-nav {
         position: fixed;

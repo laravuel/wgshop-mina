@@ -1,6 +1,6 @@
 <template>
     <view class="coupons">
-        <scroll-view wx:if="{{ coupons }}" style="height: {{ height - 55 }}px;" scroll-y bindscrolltolower="loadMore">
+        <scroll-view style="height: {{ height - 55 }}px;" scroll-y bindscrolltolower="loadMore" wx:if="{{ !isEmpty }}">
             <view class=" zan-clearfix item {{ item.expire ? 'item-over' : ''}} su-clear" wx:for="{{ coupons }}" wx:key="id">
                 <navigator url="{{ '/pages/shop/coupon?id='+item.id }}" class="item-block item-left">
                     <view class="item-block__content">
@@ -21,13 +21,22 @@
                 </view>
             </view>
         </scroll-view>
+        <loadMore :show.sync="loading"></loadMore>
+        <placeholder :show.sync="isEmpty" message="什么都没有奥~"></placeholder>
     </view>
 </template>
 
 <script>
     import wepy from 'wepy';
     import api from '@/api/api';
+    import Placeholder from '@/components/common/placeholder';
+    import LoadMore from '@/components/common/loadMore';
+
     export default class Coupons extends wepy.page {
+        components = {
+            placeholder: Placeholder,
+            loadMore: LoadMore,
+        };
         config = {
             navigationBarTitleText: "优惠券",
             navigationBarBackgroundColor: '#f2f2f2',
@@ -37,6 +46,7 @@
             },
         };
         data = {
+            loading: false,
             coupons: null,
             page: 1,
             total: 0,
@@ -88,6 +98,16 @@
             this.total = res.data.meta.pagination.total;
             this.$apply();
         }
+        methods = {
+            async get(coupon) {
+                let res = await api.storeCoupon(coupon.id);
+                if(!res.error) {
+                    await wepy.showToast({
+                        title: '领取成功'
+                    });
+                }
+            }
+        };
     }
 </script>
 

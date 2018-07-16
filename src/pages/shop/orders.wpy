@@ -15,7 +15,7 @@
                         <view class="item-header">
                             <zan-row>
                                 <zan-col col="18">
-                                    <view class="title flex-middle">
+                                    <view class="title">
                                         <image src="{{ item.thumb }}" />
                                         <view>
                                             <view class="zan-ellipsis">{{ item.name }} </view>
@@ -91,6 +91,9 @@
                 title: '未付款'
             }, {
                 id: 2,
+                title: '待发货'
+            }, {
+                id: 3,
                 title: '待收货'
             }],
             topHeight: 0,
@@ -104,7 +107,8 @@
                 return res.windowHeight;
             },
         };
-        onLoad() {
+        onLoad(params) {
+            this.type = params.type ? params.type : 0;
             this.getOrders();
         };
         onShow() {
@@ -232,7 +236,7 @@
             .item-header {
                 line-height: 26px;
                 image {
-                    width: 40px;
+                    width: 50px;
                     height: 50px;
                 }
             }

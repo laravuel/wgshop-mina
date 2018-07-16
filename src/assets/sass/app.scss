@@ -91,6 +91,15 @@ page {
     color: #fff;
 }
 
+.wg-copyright {
+    text-align: center;
+    color: $color-gray;
+    padding: 2rem 0;
+    .name {
+        color: $color-primary;
+    }
+}
+
 // 一个商品清单公共样式
 .detailed-list {
     margin: 10px 0;
@@ -108,10 +117,21 @@ page {
                 }
             }
             .title {
+                // display: table; 
+                height: 40px;
                 image {
-                    width: 30px;
+                    width: 40px;
                     height: 40px;
+                    float: left;
                     margin-right: 10px;
+                }
+                >text, >view {
+                    // display: table-cell; 
+                    // vertical-align: middle; 
+                    display: block;
+                    view {
+                        // width: 60%;
+                    }
                 }
             }
             .price {

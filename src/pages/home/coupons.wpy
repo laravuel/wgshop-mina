@@ -1,10 +1,10 @@
 <template>
     <view id="top" class="coupons-tab zan-clearfix">
-        <view class="item {{ status == item.id ? 'item-active' : '' }}" wx:for="{{ navs }}" wx:key="id">{{ item.title }}</view>
+        <view class="item {{ status == item.id ? 'item-active' : '' }}" wx:for="{{ navs }}" wx:key="id" @tap="selectStatus({{ item.id }})">{{ item.title }}</view>
     </view>
     <view class="coupons">
-        <scroll-view wx:if="{{ coupons }}" style="height: {{ height - 55 }}px;" scroll-y bindscrolltolower="loadMore">
-            <view class=" zan-clearfix item {{ item.expire ? 'item-over' : ''}} su-clear" wx:for="{{ coupons }}" wx:key="id">
+        <scroll-view wx:if="{{ coupons }}" style="height: {{ height - 55 }}px;" scroll-y bindscrolltolower="loadMore" wx:if="{{ !isEmpty }}">
+            <view class=" zan-clearfix item {{ item.expire || item.is_use ? 'item-over' : ''}} su-clear" wx:for="{{ coupons }}" wx:key="id">
                 <navigator url="{{ '/pages/home/coupon?id='+item.id }}" class="item-block item-left">
                     <view class="item-block__content">
                         <view class="item-left-number">{{ item.name }}<text>{{ item.value }}</text>{{ item.unit }}</view>
@@ -18,18 +18,28 @@
                         <view class="item-right-text">已过期</view>
                     </block>
                     <block wx:else>
-                        <view class="item-right-button" @tap="use({{ item }})">去使用</view>
+                        <view class="item-right-text" wx:if="{{ item.is_use }}">已使用</view>
+                        <view class="item-right-button" @tap="use({{ item }})" wx:else>去使用</view>
                     </block>
                 </view>
             </view>
         </scroll-view>
+        <loadMore :show.sync="loading"></loadMore>
+        <placeholder :show.sync="isEmpty" message="什么都没有奥~"></placeholder>
     </view>
 </template>
 
 <script>
     import wepy from 'wepy';
     import api from '@/api/api';
+    import Placeholder from '@/components/common/placeholder';
+    import LoadMore from '@/components/common/loadMore';
+
     export default class Coupons extends wepy.page {
+        components = {
+            placeholder: Placeholder,
+            loadMore: LoadMore,
+        };
         config = {
             navigationBarTitleText: "我的优惠券",
             navigationBarBackgroundColor: '#f2f2f2',
@@ -39,11 +49,13 @@
             },
         };
         data = {
+            loading: false,
             coupons: null,
             page: 1,
             total: 0,
             lastPage: 1,
             status: 0,
+            type: null,
             navs: [{
                 id: 0,
                 title: '未使用'
@@ -60,6 +72,9 @@
                 let res = wx.getSystemInfoSync();
                 return res.windowHeight;
             },
+        };
+        onLoad(params) {
+            this.type = params.type;
         };
         onShow() {
             this.getCoupons();
@@ -93,6 +108,26 @@
             this.total = res.data.meta.pagination.total;
             this.$apply();
         }
+        methods = {
+            selectStatus(status) {
+                this.status = status;
+                this.page = 1;
+                this.getCoupons();
+            },
+            use(coupon) {
+                if(!coupon.expire) {
+                    if(this.type == 'select') {
+                        wx.setStorageSync('coupon_id', coupon.id);
+                        wepy.navigateBack();
+                    }
+                    else {
+                        wepy.redirectTo({
+                            url : '/pages/index'
+                        });
+                    }
+                }
+            }
+        };
     }
 </script>
 

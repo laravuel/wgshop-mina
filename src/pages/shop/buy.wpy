@@ -1,7 +1,7 @@
 <template>
     <block wx:if="{{ !isEmpty }}">
         <view class="panel address">
-            <view class="panel-title">收货地址</view>
+            <view class="panel-title"><text class="wg-icon wg-icon-dizhi"></text> 收货地址</view>
             <zan-cell title="选择收货地址" is-link @tap="showAddresses" wx:if="{{ !address }}"></zan-cell>
             <view wx:else class="wg-flex-middle panel-content" @tap="showAddresses">
                 <view style="width: 80%;">
@@ -14,14 +14,14 @@
             </view>
         </view>
         <view class="panel">
-            <view class="panel-title">购物清单</view>
+            <view class="panel-title"><text class="wg-icon wg-icon-shangpin"></text> 购物清单</view>
             <view class="detailed-list">
                 <repeat for="{{ carts }}" key="id" index="index" item="item">
                     <view class="item">
                         <view class="item-header">
                             <zan-row>
                                 <zan-col col="18">
-                                    <view class="title flex-middle">
+                                    <view class="title zan-clearfix">
                                         <image src="{{ item.sku && item.sku.thumb ? item.sku.thumb : item.product.thumb }}" />
                                         <view>
                                             <view class="zan-ellipsis">{{ item.product.name }} </view>
@@ -43,15 +43,17 @@
             </view>
         </view>
         <view class="panel">
-            <view class="panel-title">优惠/积分</view>
+            <view class="panel-title"><text class="wg-icon wg-icon-youhuiquan"></text> 优惠</view>
             <zan-cell-group>
-                <zan-cell title="使用优惠券" is-link></zan-cell>
-                <zan-cell title="可用积分">
+                <zan-cell title="使用优惠券" is-link url="/pages/home/coupons?type=select">
+                    <view slot="footer">{{ coupon.name }} {{ coupon.value }}{{ coupon.unit }}{{ coupon.type_name }}</view>
+                </zan-cell>
+                <!-- <zan-cell title="可用积分">
                     <view slot="footer" >
                         <text>1000积分</text>
                         <text class="wg-icon wg-icon-help"></text>
                     </view>
-                </zan-cell>
+                </zan-cell> -->
             </zan-cell-group>
         </view>
         <view class="panel">
@@ -106,11 +108,18 @@
             cartIds: null,
             carts: null,
             isEmpty: false,
-            address: null
+            address: null,
+            coupon: null,
         };
         computed = {
             addressId() {
                 return wepy.getStorageSync('address_id');
+            },
+            couponId() {
+                return wepy.getStorageSync('coupon_id');
+            },
+            total() {
+                return this.getTotal();
             }
         };
         onLoad(param) {
@@ -175,8 +184,47 @@
                 let res = await api.getAddress(this.addressId);
                 this.address = res.data;
             }
+            if(this.couponId) {
+                let res = await api.getUserCoupon(this.couponId);
+                if(res.error) {
+                    wx.removeStorageSync('coupon_id');
+                }
+                else {
+                    this.coupon = res.data;
+                }
+            }
             this.$apply();
         };
+        onUnload() {
+            wx.removeStorageSync('coupon_id');
+        }
+        getTotal() {
+            let price = 0;
+            let num = 0;
+            if(this.carts) {
+                this.carts.forEach(item => {
+                    if(item.sku) {
+                        price += item.sku.price * item.num;
+                    }
+                    else {
+                        price += item.product.price * item.num;
+                    }
+                    num += item.num;
+                });
+            }
+            if(this.coupon) {
+                if(this.coupon.type == 1) {
+                    price -= this.coupon.value;
+                }
+                else {
+                    price *= this.coupon.value / 10;
+                }
+            }
+            return {
+                price: price,
+                num: num
+            };
+        }
         methods = {
             showAddresses() {
                 wepy.navigateTo({
@@ -198,6 +246,9 @@
                 }
                 else {
                     data.carts = this.cartIds ? this.cartIds.split(',') : null;
+                }
+                if(this.coupon) {
+                    data.coupon_id = this.coupon.id;
                 }
                 
                 let res = await api.storeOrder(data);
@@ -222,6 +273,7 @@
 </script>
 
 <style lang="scss" scoped>
+    @import '../../assets/sass/variable';
     .panel {
         background: #fff;
         margin: 8px 0;
@@ -229,6 +281,10 @@
             border-bottom: 1px solid #eee;
             padding: 15px;
             font-size: 16px;
+            .wg-icon {
+                color: $color-primary;
+                font-size: 20px;
+            }
         }
         .panel-content {
             padding: 15px;

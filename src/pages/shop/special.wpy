@@ -1,0 +1,139 @@
+<template>
+    <view class="special-bg" style="background: {{ special.configs.background }};"></view>
+    <view class="special">
+        <view class="special-banner">
+            <image src="{{ special.banner }}" mode="widthFix"/>
+            <view class="dim" style="background: {{ special.background_shade }};"></view>
+        </view>
+        <view class="special-des">{{ special.description }}</view>
+        <view class="special-content"></view>
+        <view class="special-products">
+            <navigator class="item" wx:for="{{ special.products.data }}" wx:key="id" url="/pages/shop/product?id={{ item.id }}" >
+                <view class="thumb">
+                    <image src="{{ item.thumb }}" mode="widthFix"/>
+                </view>
+                <view class="title">
+                    <zan-row>
+                        <zan-col col="18">
+                            <view class="name">{{ item.name }}</view>
+                            <view class="price">￥{{ item.price }}</view>
+                        </zan-col>
+                        <zan-col col="6">
+                            <view class="button"><button class="wg-btn inline radius">购买</button></view>
+                        </zan-col>
+                    </zan-row>
+                </view>
+            </navigator>
+        </view>
+    </view>
+</template>
+
+<script>
+    import wepy from 'wepy';
+    import api from '@/api/api';
+    import Placeholder from '@/components/common/placeholder';
+    import LoadMore from '@/components/common/loadMore';
+
+    export default class Special extends wepy.page {
+        components = {
+            placeholder: Placeholder,
+            loadMore: LoadMore,
+        };
+        config = {
+            navigationBarTitleText: "专题详情",
+            usingComponents: {
+                "zan-row": "../../zanUi/row/index",
+                "zan-col": "../../zanUi/col/index",
+            },
+        };
+        data = {
+            special: null,
+            id: 0
+        };
+        computed = {
+            
+        };
+        onLoad(params) {
+            this.id = params.id;
+            this.getSpecial();
+        };
+        async getSpecial() {
+            let res = await api.getSpecial(this.id, { include: 'products' });
+            this.special = res.data;
+            this.$apply();
+        }
+    }
+</script>
+
+<style lang="scss" scoped>
+    .special-bg {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        z-index: 1;
+    }
+    .special {
+        position: relative;
+        z-index: 1;
+    }
+    .special-banner {
+        width: 100%;
+        position: relative;
+        image {
+            width: 100%;
+            height: auto;
+        }
+        .dim {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+        }
+    }
+    .special-des {
+        padding: 20px;
+        color: #fff;
+        line-height: 24px;
+    }
+    .special-products {
+        .item {
+            color: #fff;
+            margin: 10px 20px;
+            padding: 20px 0;
+            border-bottom: 1px solid #ddd;
+            display: block;
+            &:last-child {
+                border: none;
+            }
+            .thumb {
+                width: 100%;
+                max-height: 200px;
+                border-radius: 5px;
+                overflow: hidden;
+                image {
+                    width: 100%;
+                    height: auto;
+                    border-radius: 5px;
+                }
+            }
+            .title {
+                padding: 10px 0;
+                .price {
+                    padding-top: 5px;
+                    font-size: 16px;
+                }
+                .button {
+                    text-align: right;
+                    .wg-btn {
+                        border: 1px solid #fff;
+                        background: none;
+                        color: #fff;
+                    }
+                }
+            }
+        }
+    }
+</style>
