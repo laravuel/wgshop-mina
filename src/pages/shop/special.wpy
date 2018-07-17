@@ -1,7 +1,7 @@
 <template>
     <import src="../../plugins/wxParse/wxParse.wxml"/>
     <view class="special-bg" style="background: {{ special.configs.background }};"></view>
-    <view class="special">
+    <view class="special" style="color: {{ special.configs.frontColor }}">
         <view class="special-banner">
             <image src="{{ special.banner }}" mode="widthFix"/>
             <view class="dim" style="background: {{ special.background_shade }};"></view>
@@ -22,13 +22,58 @@
                             <view class="price">￥{{ item.price }}</view>
                         </zan-col>
                         <zan-col col="6">
-                            <view class="button"><button class="wg-btn inline radius">购买</button></view>
+                            <view class="button"><button class="wg-btn inline radius" style="color: {{ special.configs.frontColor }}; border: 1px solid {{ special.configs.frontColor }}">购买</button></view>
                         </zan-col>
                     </zan-row>
                 </view>
             </navigator>
         </view>
     </view>
+    <zan-popup show="{{ showActivity }}" bindclose="closeActivity"  wx:if="{{ special.is_activity }}">
+        <view class="activity">
+            <view class="close wg-icon wg-icon-delete" @tap="closeActivity"></view>
+            <view class="title">
+                <block wx:if="{{ special.type == 1 }}">
+                    全场商品<text>{{ special.condition.discount }}折</text>！！！
+                </block>
+                <block wx:if="{{ special.type == 2 }}">
+                    满<text>{{ special.condition.max_money }}元</text>立<text>减{{ special.condition.minus }}</text>
+                </block>
+                <block wx:if="{{ special.type == 3 }}">
+                    <view>买<text>{{ special.condition.max_count }}</text>件，送<text>{{ special.condition.number }}</text>件！！！</view>
+                    <view class="mark" wx:if="{{ !special.condition.products || special.condition.products.length == 0 }}">买什么送什么！</view>
+                </block>
+            </view>
+            <view class="des">{{ special.description }}</view>
+            <view class="content">
+                <view class="item">
+                    <text>开始时间：</text>
+                    <text>{{ special.start_time }}</text>
+                </view>
+                <view class="item">
+                    <text>结束时间：</text>
+                    <text>{{ special.end_time || '无截止' }}</text>
+                </view>
+            </view>
+            <view class="products" wx:if="{{ special.condition.products && special.condition.products.length }}">
+                <view class="products-title">赠送商品：</view>
+                <view class="detailed-list">
+                    <repeat for="{{ special.condition.products }}" key="id" index="index" item="item">
+                        <view class="item">
+                            <view class="item-header">
+                                <view class="title">
+                                    <image src="{{ item.thumb }}" />
+                                    <view>
+                                        <view class="zan-ellipsis--l2">{{ item.name }} </view>
+                                    </view>
+                                </view>
+                            </view>
+                        </view>
+                    </repeat>
+                </view>
+            </view>
+        </view>
+    </zan-popup>
 </template>
 
 <script>
@@ -49,11 +94,13 @@
             usingComponents: {
                 "zan-row": "../../zanUi/row/index",
                 "zan-col": "../../zanUi/col/index",
+                "zan-popup": "../../zanUi/popup/index",
             },
         };
         data = {
             special: null,
-            id: 0
+            id: 0,
+            showActivity: true
         };
         computed = {
             
@@ -65,15 +112,24 @@
         async getSpecial() {
             let res = await api.getSpecial(this.id, { include: 'products' });
             if(res.data.content) WxParse.wxParse('content', 'html', res.data.content, this);
+            wx.setNavigationBarTitle({
+                title: res.data.name
+            });
             this.special = res.data;
             this.$apply();
-        }
+        };
+        methods = {
+            closeActivity() {
+                this.showActivity = false;
+            }
+        };
     }
 </script>
 <style scoped>
     @import '../../assets/wxss/html.wxss';
 </style>
 <style lang="scss" scoped>
+    @import '../../assets/sass/variable';
     .special-bg {
         position: fixed;
         left: 0;
@@ -103,7 +159,6 @@
     }
     .special-des {
         padding: 20px;
-        color: #fff;
         line-height: 24px;
     }
     .special-content {
@@ -111,7 +166,6 @@
     }
     .special-products {
         .item {
-            color: #fff;
             margin: 10px 20px;
             padding: 20px 0;
             border-bottom: 1px solid #ddd;
@@ -139,12 +193,46 @@
                 .button {
                     text-align: right;
                     .wg-btn {
-                        border: 1px solid #fff;
                         background: none;
-                        color: #fff;
                     }
                 }
             }
+        }
+    }
+    .activity {
+        width: 80vw;
+        padding: 30px 20px;
+        border-radius: 10px;
+        background: #fff;
+        position: relative;
+        .close {
+            position: absolute;
+            color: #fff;
+            font-size: 30px;
+            top: -70px;
+            left: 47%;
+        }
+        >.title {
+            font-size: 20px;
+            text-align: center;
+            line-height: 24px;
+            padding-bottom: 10px;
+            color: #333;
+            text {
+                color: $color-danger;
+                font-weight: bold;
+            }
+            .mark {
+                color: #999;
+                font-size: 14px;
+            }
+        }
+        .des {
+            padding-bottom: 10px;
+            color: #666;
+        }
+        .products {
+            margin-top: 20px;
         }
     }
 </style>

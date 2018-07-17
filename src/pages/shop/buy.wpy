@@ -20,7 +20,7 @@
                     <view class="item">
                         <view class="item-header">
                             <zan-row>
-                                <zan-col col="18">
+                                <zan-col col="16">
                                     <view class="title zan-clearfix">
                                         <image src="{{ item.sku && item.sku.thumb ? item.sku.thumb : item.product.thumb }}" />
                                         <view>
@@ -31,9 +31,17 @@
                                         </view>
                                     </view>
                                 </zan-col>
-                                <zan-col col="6">
-                                    <view class="price zan-pull-right">
-                                        <text class="zan-c-gray-dark">{{ item.num }} × </text><text class="zan-font-16 zan-c-red">{{ item.sku ? item.sku.price : item.product.price }}元</text>
+                                <zan-col col="8">
+                                    <view class="price zan-pull-right wg-flex-middle" style="line-height: normal;">
+                                        <view class="zan-c-gray-dark">{{ item.num }} × </view>
+                                        <view wx:if="{{ item.sku }}">
+                                            <view class="zan-font-12 wg-color-gray zan-text-deleted" wx:if="{{ item.sku.activity_price }}">￥{{ item.sku.price }}</view>
+                                            <view class="zan-font-16 zan-c-red">￥{{ item.sku.activity_price }}</view>
+                                        </view>
+                                        <view wx:else>
+                                            <view class="zan-font-12 wg-color-gray zan-text-deleted" wx:if="{{ item.product.old_price }}">￥{{ item.product.old_price }}</view>
+                                            <view class="zan-font-16 zan-c-red">￥{{ item.product.price }}</view>
+                                        </view>
                                     </view>
                                 </zan-col>
                             </zan-row>
@@ -203,12 +211,7 @@
             let num = 0;
             if(this.carts) {
                 this.carts.forEach(item => {
-                    if(item.sku) {
-                        price += item.sku.price * item.num;
-                    }
-                    else {
-                        price += item.product.price * item.num;
-                    }
+                    price += (item.sku ? (item.sku.activity_price || item.sku.price) : item.product.price) * item.num;
                     num += item.num;
                 });
             }

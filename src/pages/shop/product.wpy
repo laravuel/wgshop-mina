@@ -11,7 +11,7 @@
         <view class="title-cell">
             <view class="title zan-font-18">{{ product.name }}</view>
             <view class="description">{{ product.description || '' }}</view>
-            <view class="price zan-font-18">￥{{ product.price }}</view>
+            <view class="price zan-font-18">￥{{ product.price }} <text class="zan-text-deleted wg-color-gray zan-font-12" wx:if="{{ product.old_price }}">￥{{ product.old_price }}</text></view>
         </view>
         <view class="panel">
             <zan-panel hide-border>
@@ -21,8 +21,9 @@
                         <view slot="footer" wx:if="{{ product.couponsCount }}">有 <text class="wg-color-danger">{{ product.couponsCount }}</text> 张优惠券，赶快领取!!!!</view>
                         <view slot="footer" wx:else>暂无可用优惠券~</view>
                     </zan-cell>
-                    <zan-cell title="促销">
+                    <zan-cell title="促销" wx:if="{{ product.activity }}" is-link url="/pages/shop/special?id={{ product.activity.id }}">
                         <text class="wg-icon wg-icon-cuxiao" slot="icon"></text>
+                        <view slot="footer">该商品正在进行促销，点击查看~</view>
                     </zan-cell>
                 </zan-cell-group>
             </zan-panel>
@@ -64,7 +65,7 @@
                 </button>
             </zan-col>
             <zan-col col="4">
-                <navigator url="/pages/shop/carts" class="nav-icon">
+                <navigator url="/pages/shop/carts" open-type="switchTab" class="nav-icon">
                     <view class="badge" wx:if="{{ cartsCount }}">{{ cartsCount }}</view>
                     <zan-icon type="cart" style="font-size: 25px;"></zan-icon>
                 </navigator>
@@ -84,7 +85,7 @@
                     <image src="{{ sku && sku.thumb ? sku.thumb : product.thumb }}" mode="widthFix" />
                 </view>
                 <view class="product-detail">
-                    <view class="price zan-c-red zan-font-18">￥{{ sku ? sku.price : product.price }}</view>
+                    <view class="price zan-c-red zan-font-18">￥{{ sku ? (sku.activity_price || sku.price) : product.price }}</view>
                     <view class="stocks">库存： {{ sku ? sku.stocks : product.stocks }} 件</view>
                     <view class="params">选择： <span wx:for="{{ product.specs.data }}" wx:key="id">{{ item.selected ? item.value.name : item.name }} </span></view>
                 </view>
@@ -163,7 +164,7 @@
         };
         async getProduct() {
             let res = await api.getProduct(this.id, {
-                include: 'attributes.values,specs.values,brand,skus.params,images,content,couponsCount'
+                include: 'attributes.values,specs.values,brand,skus.params,images,content,couponsCount,activity'
             });
             if(res.data.content) WxParse.wxParse('content', 'html', res.data.content, this);
             this.product = res.data;

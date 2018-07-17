@@ -7,7 +7,18 @@
                 </view>
                 <view class="content">
                     <view class="title">{{ item.name }}</view>
-                    <view class="des">{{ item.description }}</view>
+                    <view class="des" wx:if="{{ !item.is_activity }}">{{ item.description }}</view>
+                    <view class="activity" wx:else>
+                        <zan-row>
+                            <zan-col col="20">
+                                <view>开始时间：{{ item.start_time }}</view>
+                                <view>结束时间：{{ item.end_time || '无截止' }}</view>
+                            </zan-col>
+                            <zan-col col="4">
+                                <view class="status">{{ !item.is_start ? '未开始' : (item.is_over ? '已结束' : '进行中') }}</view>
+                            </zan-col>
+                        </zan-row>
+                    </view>
                 </view>
             </navigator>
         </view>
@@ -31,6 +42,10 @@
             navigationBarTitleText: "专场",
             navigationBarBackgroundColor: '#f2f2f2',
             navigationBarTextStyle: 'black',
+            usingComponents: {
+                "zan-row": "../../zanUi/row/index",
+                "zan-col": "../../zanUi/col/index",
+            },
         };
         data = {
             loading: false,
@@ -38,6 +53,7 @@
             page: 1,
             total: 0,
             lastPage: 1,
+            type: 0 // 0：专题，1：促销
         };
         computed = {
             isEmpty() {
@@ -48,7 +64,11 @@
                 return res.windowHeight;
             },
         };
-        onLoad() {
+        onLoad(params) {
+            this.type = params.type ? params.type : 0;
+            wx.setNavigationBarTitle({
+                title: !this.type ? '专场' : '促销活动'
+            });
             this.getSpecials();
         };
         loadMore() {
@@ -63,6 +83,7 @@
                 _loading: this.page == 1 ? true : false,
                 data: {
                     page: this.page,
+                    type: this.type
                 }
             });
             this.loading = false;
@@ -98,10 +119,20 @@
                 padding: 10px 15px;
                 .title {
                     font-size: 16px;
-                    padding-bottom: 5px;
+                    padding-bottom: 10px;
                 }
                 .des {
                     color: #999;
+                }
+                .activity {
+                    background: #fafafa;
+                    margin: 0 -15px -10px -15px;
+                    padding: 15px;
+                    color: #666;
+                    border-radius: 0 0 5px 5px;
+                    .status {
+                        line-height: 38px;
+                    }
                 }
             }
         }

@@ -26,7 +26,7 @@
                     </view>
                     <view class="content">
                         <view class="name zan-ellipsis--l2">{{ item.name }}</view>
-                        <view class="price zan-font-16">￥{{ item.price }}</view>
+                        <view class="price zan-font-16">￥{{ item.price }} <text class="zan-text-deleted wg-color-gray zan-font-12" wx:if="{{ item.old_price }}">￥{{ item.old_price }}</text></view>
                     </view>
                 </view>
             </view>

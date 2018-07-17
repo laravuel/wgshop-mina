@@ -46,7 +46,7 @@ const storeCoupon = (couponId, data = {}) => http.request(`/user/coupons`, { met
 const getCoupons = (data) => http.request(`/shop/coupons`, { data });
 const getCoupon = (id, data) => http.request(`/shop/coupons/${id}`, { data });
 
-// 专题
+// 专题/促销
 const getSpecials = (object) => http.request(`/shop/specials`, object);
 const getSpecial = (id, data) => http.request(`/shop/specials/${id}`, { data });
 

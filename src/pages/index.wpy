@@ -1,33 +1,217 @@
 <template>
-    <zan-panel title="大号按钮，没有边框线及圆角">
-        <zan-button size="large" type="primary" @tap="toast">确认付款</zan-button>
-        <zan-button size="large" type="warn">立即购买</zan-button>
-        <zan-button size="large" type="danger">立即购买</zan-button>
-    </zan-panel>
-    <zan-toast id="zan-toast-test"></zan-toast>
+    <view class="top">
+        <zan-panel>
+            <view class="search">
+                <navigator url="/pages/shop/products" class="search-form wg-flex-middle">
+                    <text class="wg-icon wg-icon-search"></text><text>夏季 短裤</text>
+                </navigator>
+            </view>
+        </zan-panel>
+    </view>
+
+    <view class="slide panel border">
+        <view class="title">
+            <text>今日热推</text>
+            <text>每天都有爆款</text>
+        </view>
+        <swiper indicator-dots="{{ true }}" interval="3000" style="height: 200px" id="swiper">
+            <swiper-item>
+                <image src="https://s10.mogucdn.com/mlcdn/c45406/180709_06b8606f2del0d08e3fcj481g5jfg_750x390.jpg" mode="widthFix" id="swiper-image-0"></image>
+            </swiper-item>
+            <swiper-item>
+                <image src="https://s10.mogucdn.com/mlcdn/c45406/180716_370l25af6ak14lk5fhh8422gc92d0_750x390.jpg" mode="widthFix" id="swiper-image-0"></image>
+            </swiper-item>
+        </swiper>
+    </view>
+
+    <view class="activity panel margin">
+        <view class="panel-title wg-flex-between">
+            <text>促销会场</text>
+            <navigator url="/pages/shop/specials?type=1">更多促销</navigator>
+        </view>
+        <view class="list wg-flex-middle">
+            <view class="item">
+                <image src="http://localhost/uploads//0/20180717/1531809885psThVw7VanccWKpA9p5FBILrg1wt9l.png" mode="widthFix"/>
+            </view>
+            <view class="item">
+                <image src="http://localhost/uploads//0/20180716/1531730929vbDHXfxW7vWX7YQbJaZCZcCUbOg5lR.png" mode="widthFix"/>
+            </view>
+        </view>
+    </view>
+
+    <view class="special panel">
+        <view class="panel-title wg-flex-between">
+            <text>主题专场<text class="mark">掌柜懂你</text></text>
+            <navigator url="/pages/shop/specials">更多主题</navigator>
+        </view>
+        <view class="special-item">
+            <view class="banner"><image src="http://localhost/uploads//0/20180717/1531809885psThVw7VanccWKpA9p5FBILrg1wt9l.png" mode="aspectFill"/></view>
+            <view class="products wg-flex-middle">
+                <view class="item">
+                    <image src="http://localhost/uploads//2/20180714/1531538980Mw2jwKB4rjfJuAYSyRtfT8kIDXo8F6.jpeg" mode="widthFix"/>
+                    <view class="name zan-ellipsis">卢卡斯解放路可适当减肥</view>
+                    <view class="price">￥49.9</view>
+                </view>
+            </view>
+        </view>
+    </view>
+
+    <view class="like">
+        <view class="title">猜你喜欢</view>
+        <view class="products">
+
+        </view>
+    </view>
 </template>
 <script>
     import wepy from 'wepy';
     import Toast from '../zanUi/toast/toast';
     export default class Index extends wepy.page {
         config = {
+            navigationBarBackgroundColor: '#F56C6C',
+            navigationBarTextStyle: 'light',
             usingComponents: {
-                "zan-button": "../zanUi/btn/index",
-                "zan-button-group": "../zanUi/btn-group/index",
+                "zan-search": "../zanUi/search/index",
+                "zan-row": "../zanUi/row/index",
+                "zan-col": "../zanUi/col/index",
                 "zan-panel": "../zanUi/panel/index",
-                "zan-toast": "../zanUi/toast/index",
             },
         };
         data = {};
         computed = {};
-        onShow() {}
+        onShow() {};
         methods = {
-            toast() {
-                Toast({
-                    message: 'toast me',
-                    selector: '#zan-toast-test'
-                });
-            }
+            
         };
     }
 </script>
+
+<style lang="scss" scoped>
+    @import '../assets/sass/variable';
+    .panel {
+        background: #fff;
+        &.margin {
+            margin-bottom: 10px;
+        }
+        &.border {
+            border-bottom: 1px solid #eee;
+        }
+    }
+    .search {
+        padding: 8px 10px;
+        .search-form {
+            background: #eee;
+            border: 1px solid #eee;
+            border-radius: 100px;
+            padding: 5px 10px;
+            input {
+                display: inline-block;
+                width: 100%;
+                padding-left: 5px;
+            }
+            .wg-icon {
+                color: #666;
+            }
+        }
+    }
+    .panel-title {
+        padding: 15px 10px;
+        >text {
+            font-size: 16px;
+            font-weight: bold;
+            position: relative;
+            padding-left: 10px;
+            .mark {
+                font-size: 13px;
+                color: #999;
+                margin-left: 8px;
+                font-weight: normal;
+            }
+            &:before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 3px;
+                background: $color-danger;
+            }
+        }
+        navigator {
+            color: $color-primary;
+        }
+    }
+    .slide {
+        padding: 8px;
+        .title {
+            font-size: 16px;
+            padding-bottom: 10px;
+            text:first-child {
+                font-weight: bold;
+            }
+            text:last-child {
+                font-size: 13px;
+                color: #999;
+                margin-left: 8px;
+            }
+        }
+        swiper {
+            swiper-item {
+                border-radius: 5px;
+            }
+            image {
+                width: 100%;
+                height: auto;
+                border-radius: 5px;
+            }
+        }
+    }
+    .activity {
+        .list {
+            padding: 0 10px 10px 10px;
+            overflow-x: auto;
+            .item {
+                margin-right: 10px;
+                image {
+                    width: 220px;
+                    border-radius: 5px;
+                }
+            }
+        }
+    }
+    .special-item {
+        margin-bottom: 10px;
+        .banner {
+            height: 120px;
+            overflow: hidden;
+            image {
+                width: 100%;
+                height: 120px;
+            }
+        }
+        .products {
+            overflow-x: auto;
+            .item {
+                margin: 8px;
+                width: 100px;
+                image {
+                    width: 100px;
+                    height: 100px;
+                    border-radius: 3px;
+                }
+                .price {
+                    text-align: center;
+                    color: $color-danger;
+                }
+            }
+        }
+    }
+    .like {
+        >.title {
+            text-align: center;
+            padding: 10px 0;
+            color: #444;
+            font-size: 16px;
+        }
+    }
+</style>
