@@ -1,7 +1,7 @@
 <template>
     <block wx:if="{{ !isEmpty }}">
         <view class="panel address">
-            <view class="panel-title"><text class="wg-icon wg-icon-dizhi"></text> 收货地址</view>
+            <!-- <view class="panel-title"><text class="wg-icon wg-icon-dizhi"></text> 收货地址</view> -->
             <zan-cell title="选择收货地址" is-link @tap="showAddresses" wx:if="{{ !address }}"></zan-cell>
             <view wx:else class="wg-flex-middle panel-content" @tap="showAddresses">
                 <view style="width: 80%;">
@@ -36,7 +36,7 @@
                                         <view class="zan-c-gray-dark">{{ item.num }} × </view>
                                         <view wx:if="{{ item.sku }}">
                                             <view class="zan-font-12 wg-color-gray zan-text-deleted" wx:if="{{ item.sku.activity_price }}">￥{{ item.sku.price }}</view>
-                                            <view class="zan-font-16 zan-c-red">￥{{ item.sku.activity_price }}</view>
+                                            <view class="zan-font-16 zan-c-red">￥{{ item.sku.activity_price || item.sku.price }}</view>
                                         </view>
                                         <view wx:else>
                                             <view class="zan-font-12 wg-color-gray zan-text-deleted" wx:if="{{ item.product.old_price }}">￥{{ item.product.old_price }}</view>
@@ -49,9 +49,17 @@
                     </view>
                 </repeat>
             </view>
+            <view class="activity wg-flex-between" wx:if="{{ activity }}">
+                <navigator url="/pages/shop/special?id={{ activity.id }}" class="wg-color-danger">{{ activity.condition_string }} <text class="wg-icon wg-icon-60" style="font-size: 20px;"></text></navigator>
+                <text wx:if="{{ activity.is_money_off }}">
+                    <block wx:if="{{ activityDiscounts }}">- ￥{{ activityDiscounts }}</block>
+                    <block wx:else>还差 {{ activity.condition.max_money -total.price }} 元</block>
+                </text>
+                <text wx:if="{{ activity.is_discount }}">- ￥{{ activityDiscounts }}</text>
+            </view>
         </view>
         <view class="panel">
-            <view class="panel-title"><text class="wg-icon wg-icon-youhuiquan"></text> 优惠</view>
+            <!-- <view class="panel-title"><text class="wg-icon wg-icon-youhuiquan"></text> 优惠</view> -->
             <zan-cell-group>
                 <zan-cell title="使用优惠券" is-link url="/pages/home/coupons?type=select">
                     <view slot="footer">{{ coupon.name }} {{ coupon.value }}{{ coupon.unit }}{{ coupon.type_name }}</view>
@@ -80,7 +88,7 @@
     <view class="buy-nav">
         <zan-row>
             <zan-col col="16">
-                <view class="price">合计：<text class="wg-color-danger">{{ total.price }}元</text></view>
+                <view class="price">合计：<text class="wg-color-danger">{{ total.amount }}元</text></view>
             </zan-col>
             <zan-col col="8">
                 <button disabled="{{ total.num <= 0 }}" class="wg-btn-danger large" @tap="submit">提交订单</button>
@@ -118,6 +126,8 @@
             isEmpty: false,
             address: null,
             coupon: null,
+            activity: null,
+            activityDiscounts: 0,
         };
         computed = {
             addressId() {
@@ -150,7 +160,7 @@
             if (this.skuId && this.productId) {
                 // 直接购买 选择了sku的商品
                 let res = await api.getProductSku(this.productId, this.skuId, {
-                    include: 'params,product'
+                    include: 'params,product.activity'
                 });
                 this.carts = [];
                 this.carts.push({
@@ -158,10 +168,12 @@
                     product: res.data.product,
                     num: this.num
                 });
+                this.activity = res.data.product.activity;
+                delete(res.data.product.activity);
             } else if (this.productId) {
                 // 直接购买 无sku的商品
                 let res = await api.getProduct(this.productId, {
-                    include: 'skus'
+                    include: 'skus,activity'
                 });
                 if(res.data.skus) {
                     wepy.showModal({
@@ -179,6 +191,8 @@
                     product: res.data,
                     num: this.num
                 });
+                this.activity = res.data.activity;
+                delete(res.data.activity);
             } else if (this.cartIds) {
                 // 购物车选择购买
                 let res = await api.getCarts({
@@ -187,6 +201,7 @@
                     params: 1
                 });
                 this.carts = res.data.data;
+                this.activity = res.data.meta.activity;
             }
             if(this.addressId) {
                 let res = await api.getAddress(this.addressId);
@@ -208,23 +223,37 @@
         }
         getTotal() {
             let price = 0;
+            let amount = 0;
             let num = 0;
             if(this.carts) {
                 this.carts.forEach(item => {
-                    price += (item.sku ? (item.sku.activity_price || item.sku.price) : item.product.price) * item.num;
+                    price += (item.sku ? item.sku.price : (item.product.old_price || item.product.price)) * item.num;
                     num += item.num;
                 });
             }
+            amount = price;
+            // 促销折扣计算
+            if(this.activity && this.activity.is_discount) {
+                amount *= this.activity.condition.discount / 10;
+                this.activityDiscounts = price - amount;
+            }
+            // 促销满减计算
+            if(this.activity && this.activity.is_money_off && price >= this.activity.condition.max_money) {
+                amount -= this.activity.condition.minus;
+                this.activityDiscounts = this.activity.condition.minus;
+            }
+            // 选择优惠券重新计算总价
             if(this.coupon) {
                 if(this.coupon.type == 1) {
-                    price -= this.coupon.value;
+                    amount -= this.coupon.value;
                 }
                 else {
-                    price *= this.coupon.value / 10;
+                    amount *= this.coupon.value / 10;
                 }
             }
             return {
                 price: price,
+                amount: amount,
                 num: num
             };
         }
@@ -305,6 +334,11 @@
             .item:last-child {
                 border: none;
             }
+        }
+        .activity {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            color: #666;
         }
     }
     .address {

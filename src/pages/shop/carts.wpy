@@ -1,56 +1,67 @@
 <template>
     <view class="detailed-list">
-        <repeat for="{{ carts }}" key="id" index="index" item="item">
-            <view class="item">
-                <view class="item-header">
-                    <zan-row>
-                        <zan-col col="2">
-                            <view class="select zan-c-gray-dark" @tap="select({{ index }})">
-                                <zan-icon type="check" class="select-icon" wx:if="{{ !item.selected }}"></zan-icon>
-                                <zan-icon type="checked" class="select-icon selected" wx:else></zan-icon>
-                            </view>
-                        </zan-col>
-                        <zan-col col="15">
-                            <view class="title">
-                                <image src="{{ item.sku && item.sku.thumb ? item.sku.thumb : item.product.thumb }}" />
-                                <text class="zan-ellipsis--l2">{{ item.product.name }}</text>
-                            </view>
-                        </zan-col>
-                        <zan-col col="7">
-                            <view class="price zan-pull-right wg-flex-middle" style="line-height: normal;">
-                                <view class="zan-c-gray-dark">{{ item.num }} × </view>
-                                <view wx:if="{{ item.sku }}">
-                                    <view class="zan-font-12 wg-color-gray zan-text-deleted" wx:if="{{ item.sku.activity_price }}">￥{{ item.sku.price }}</view>
-                                    <view class="zan-font-16 zan-c-red">￥{{ item.sku.activity_price }}</view>
-                                </view>
-                                <view wx:else>
-                                    <view class="zan-font-12 wg-color-gray zan-text-deleted" wx:if="{{ item.product.old_price }}">￥{{ item.product.old_price }}</view>
-                                    <view class="zan-font-16 zan-c-red">￥{{ item.product.price }}</view>
-                                </view>
-                            </view>
-                        </zan-col>
-                    </zan-row>
+        <block wx:for="{{ carts }}" wx:key="id" wx:for-index="cartIndex" wx:for-item="cart">
+            <view class="cart">
+                <view class="cart-group">
+                    <navigator url="/pages/shop/special?id={{ cart.group.id }}" class="title" wx:if="{{ cart.group.id }}">
+                        <text><text wx:if="{{ cart.group.id }}">促销：</text>{{ cart.group.name }}</text>
+                        <text>【{{ cart.group.condition_string }}】</text>
+                    </navigator>
+                    <view wx:else class="title" style="color: #444;">
+                        {{ cart.group.name }}
+                    </view>
                 </view>
-                <view class="item-main">
-                    <zan-row>
-                        <zan-col col="10">
-                            <view wx:if="{{ item.sku }}" class="name">
-                                <text wx:for="{{ item.sku.params }}" wx:for-item="param" wx:key="id">{{ param.param_name }} </text>
-                            </view>
-                            <view wx:else class="name">
-                                <text>无规格</text>
-                            </view>
-                        </zan-col>
-                        <zan-col col="14">
-                            <view class="flex-middle cart-num">
-                                <zan-stepper stepper="{{ item.num }}" min="1" max="{{ item.sku ? item.sku.stocks : item.product.stocks }}" size="small" bind:change="setNum({{ index }})"></zan-stepper>
-                                <view class="delete" @tap="remove({{ index }})"><zan-icon type="delete"></zan-icon></view>
-                            </view>
-                        </zan-col>
-                    </zan-row>
+                <view class="item" wx:for="{{ cart.products }}" wx:for-index="index" wx:for-item="item" wx:key="{{ item.id }}">
+                    <view class="item-header">
+                        <zan-row>
+                            <zan-col col="2">
+                                <view class="select zan-c-gray-dark" @tap="select({{ cartIndex }}, {{ index }})">
+                                    <zan-icon type="check" class="select-icon" wx:if="{{ !item.selected }}"></zan-icon>
+                                    <zan-icon type="checked" class="select-icon selected" wx:else></zan-icon>
+                                </view>
+                            </zan-col>
+                            <zan-col col="15">
+                                <view class="title">
+                                    <image src="{{ item.sku && item.sku.thumb ? item.sku.thumb : item.product.thumb }}" />
+                                    <text class="zan-ellipsis--l2">{{ item.product.name }}</text>
+                                </view>
+                            </zan-col>
+                            <zan-col col="7">
+                                <view class="price zan-pull-right wg-flex-middle" style="line-height: normal;">
+                                    <view class="zan-c-gray-dark">{{ item.num }} × </view>
+                                    <view wx:if="{{ item.sku }}">
+                                        <view class="zan-font-12 wg-color-gray zan-text-deleted" wx:if="{{ item.sku.activity_price }}">￥{{ item.sku.price }}</view>
+                                        <view class="zan-font-16 zan-c-red">￥{{ item.sku.activity_price || item.sku.price }}</view>
+                                    </view>
+                                    <view wx:else>
+                                        <view class="zan-font-12 wg-color-gray zan-text-deleted" wx:if="{{ item.product.old_price }}">￥{{ item.product.old_price }}</view>
+                                        <view class="zan-font-16 zan-c-red">￥{{ item.product.price }}</view>
+                                    </view>
+                                </view>
+                            </zan-col>
+                        </zan-row>
+                    </view>
+                    <view class="item-main">
+                        <zan-row>
+                            <zan-col col="10">
+                                <view wx:if="{{ item.sku }}" class="name">
+                                    <text wx:for="{{ item.sku.params }}" wx:for-item="param" wx:key="id">{{ param.param_name }} </text>
+                                </view>
+                                <view wx:else class="name">
+                                    <text>无规格</text>
+                                </view>
+                            </zan-col>
+                            <zan-col col="14">
+                                <view class="flex-middle cart-num">
+                                    <zan-stepper stepper="{{ item.num }}" min="1" max="{{ item.sku ? item.sku.stocks : item.product.stocks }}" size="small" bind:change="setNum({{ cartIndex }}, {{ index }})"></zan-stepper>
+                                    <view class="delete" @tap="remove({{ cartIndex }}, {{ index }})"><zan-icon type="delete"></zan-icon></view>
+                                </view>
+                            </zan-col>
+                        </zan-row>
+                    </view>
                 </view>
             </view>
-        </repeat>
+        </block>
         <placeholder :show.sync="isEmpty" message="购物车什么都没有奥~" iconType="custome">
             <zan-icon slot="icon" type="shopping-cart" style="font-size: 50px; color: #999;"></zan-icon>
             <navigator open-type="redirect" url="/pages/index"><button style="display: inline-block; margin: 20px;" class="wg-btn-danger radius">去商城逛逛</button></navigator>
@@ -60,9 +71,13 @@
     <view class="buy-nav">
         <zan-row>
             <zan-col col="6">
-                <view class="select" @tap="selectAll">
+                <view class="select" @tap="selectAll" wx:if="{{ carts.length == 1 }}">
                     <zan-icon slot="icon" type="checked" class="select-icon selected" wx:if="{{ selectedAll }}"></zan-icon>
                     <zan-icon slot="icon" type="check" class="select-icon" wx:else></zan-icon>
+                    全选
+                </view>
+                <view class="select" wx:else style="color: #ccc;">
+                    <zan-icon slot="icon" type="check" class="select-icon" disabled></zan-icon>
                     全选
                 </view>
             </zan-col>
@@ -80,7 +95,6 @@
     import wepy from 'wepy';
     import api from '@/api/api';
     import Placeholder from '@/components/common/placeholder';
-    let timer = null;
 
     export default class Carts extends wepy.page {
         components = {
@@ -119,10 +133,16 @@
                     num: 0
                 };
                 if(!this.isEmpty) {
-                    this.carts.map(item => {
-                        if(item.selected) {
-                            total.price += (item.sku ? (item.sku.activity_price || item.sku.price) : item.product.price) * item.num;
-                            total.num += item.num;
+                    this.carts.map(cart => {
+                        cart.products.map(item => {
+                            if(item.selected) {
+                                total.price += (item.sku ? (item.sku.activity_price || item.sku.price) : item.product.price) * item.num;
+                                total.num += item.num;
+                            }
+                        });
+                        // 满减计算
+                        if(cart.group.id && cart.group.is_money_off && total.price >= cart.group.condition.max_money) {
+                            total.price -= cart.group.condition.minus;
                         }
                     });
                 }
@@ -132,10 +152,12 @@
         watch = {
             carts() {
                 let selected = [];
-                this.carts.map(item => {
-                    if(item.selected) {
-                        selected.push(item.id);
-                    }
+                this.carts.map(cart => {
+                    cart.products.map(item => {
+                        if(item.selected) {
+                            selected.push(item.id);
+                        }
+                    });
                 });
                 this.selected = selected;
                 this.$apply();
@@ -144,27 +166,45 @@
         async onShow() {
             let res = await api.getCarts({ include: 'product,sku', params: 1 });
             this.carts = res.data.data;
-            this.selectAll();
+            // this.selectAll();
             this.$apply();
         };
         selectAll() {
-            this.carts.map(item => {
-                item.selected = this.selectedAll ? false : true;
-            });
+            if(this.carts.length == 1) {
+                this.carts.map(cart => {
+                    cart.products.map(item => {
+                        item.selected = this.selectedAll ? false : true;
+                    });
+                });
+            }
+            
         };
         methods = {
-            select(index) {
-                this.carts[index].selected = !this.carts[index].selected;
+            select(cartIndex, index) {
+                let product = this.carts[cartIndex]['products'][index];
+                if(!product.selected) {
+                    this.carts.map((cart, i) => {
+                        if(i == cartIndex) return;
+                        cart.products.map(item => {
+                            item.selected = false;
+                        });
+                    });
+                }
+                this.carts[cartIndex]['products'][index].selected = !product.selected;
             },
-            async setNum(index, event) {
+            async setNum(cartIndex, index, event) {
                 let that = this;
-                this.carts[index].num = event.detail;
-                await api.updateCart(that.carts[index].id, this.carts[index].num);
+                let product = this.carts[cartIndex].products[index];
+                product.num = event.detail;
+                await api.updateCart(product.id, product.num);
             },
-            async remove(index) {
-                let res = await api.deleteCart(this.carts[index].id);
+            async remove(cartIndex, index) {
+                let res = await api.deleteCart(this.carts[cartIndex].products[index].id);
                 if(!res.error) {
-                    this.carts.splice(index, 1);
+                    this.carts[cartIndex].products.splice(index, 1);
+                    if(!this.carts[cartIndex].products.length) {
+                        this.carts.splice(cartIndex, 1);
+                    }
                     this.$apply();
                 }
             },
@@ -182,7 +222,16 @@
     .select-ionc {
         color: #999;
     }
-    
+    .cart {
+        padding: 10px;
+        .cart-group {
+            background: #fff;
+            padding: 15px;
+            .title {
+                color: $color-danger;
+            }
+        }
+    }
     .buy-nav {
         position: fixed;
         bottom: 0;
