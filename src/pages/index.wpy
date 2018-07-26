@@ -118,7 +118,6 @@
         padding: 15px 10px;
         >text {
             font-size: 16px;
-            font-weight: bold;
             position: relative;
             padding-left: 10px;
             .mark {
@@ -146,9 +145,7 @@
         .title {
             font-size: 16px;
             padding-bottom: 10px;
-            text:first-child {
-                font-weight: bold;
-            }
+
             text:last-child {
                 font-size: 13px;
                 color: #999;

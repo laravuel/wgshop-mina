@@ -41,7 +41,7 @@
             <view class="item">
                 <view class="item-header">
                     <zan-row>
-                        <zan-col col="18">
+                        <zan-col col="16">
                             <view class="title">
                                 <image src="{{ item.thumb }}" />
                                 <view>
@@ -52,9 +52,13 @@
                                 </view>
                             </view>
                         </zan-col>
-                        <zan-col col="6">
-                            <view class="price zan-pull-right">
-                                <text class="zan-c-gray-dark">{{ item.num }} × </text><text class="zan-font-16 wg-color-dark-gray">{{ item.price }}元</text>
+                        <zan-col col="8">
+                            <view class="price zan-pull-right wg-flex-middle" style="line-height: normal;">
+                                <view class="zan-c-gray-dark">{{ item.num }} × </view>
+                                <view>
+                                    <view class="zan-font-12 wg-color-gray zan-text-deleted" wx:if="{{ item.old_price != item.price }}">￥{{ item.old_price }}</view>
+                                    <view class="zan-font-16 wg-color-dark-gray">￥{{ item.price }}</view>
+                                </view>
                             </view>
                         </zan-col>
                     </zan-row>
@@ -65,13 +69,15 @@
     <view class="total">
         <view>
             <view class="wg-flex">
-                <text>订单金额：</text>
+                <text>订单总计：</text>
                 <text>￥{{ order.total_price }}</text>
             </view>
-            <view class="wg-flex" wx:if="{{ order.userCoupon }}">
-                <text>优惠券：</text>
-                <text>- {{ order.userCoupon.value }}{{ order.userCoupon.unit }}<text wx:if="{{ order.userCoupon.products }}">（部分商品）</text></text>
+            <block wx:if="{{ order.discounts && order.discounts.length }}">
+            <view class="wg-flex" wx:for="{{ order.discounts }}" wx:key="index">
+                <text>{{ item.name }}：</text>
+                <text wx:if="{{ item.value }}">{{ item.value }}</text>
             </view>
+            </block>
             <view class="wg-flex">
                 <text>运费：</text>
                 <text>免运费</text>

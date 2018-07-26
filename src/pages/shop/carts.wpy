@@ -239,6 +239,7 @@
         right: 0;
         background: #fff;
         line-height: 48px;
+        z-index: 2;
         .select {
             padding-left: 20px;
             font-size: 16px;

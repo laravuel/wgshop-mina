@@ -1,0 +1,132 @@
+<template>
+    <scroll-view style="height: {{ height }}px" scroll-y @scrolltolower="loadMore" wx:if="{{ !isEmpty }}">
+        <view class="products zan-clearfix">
+            <view class="item" wx:for="{{ products }}" wx:key="id" @tap="to({{ item }})">
+                <view class="item-wrap">
+                    <view class="thumb wg-flex-middle">
+                        <image src="{{ item.thumb }}" mode="widthFix"/>
+                    </view>
+                    <view class="content">
+                        <view class="name zan-ellipsis--l2">{{ item.name }}</view>
+                        <view class="price zan-font-16">￥{{ item.price }} <text class="zan-text-deleted wg-color-gray zan-font-12" wx:if="{{ item.old_price }}">￥{{ item.old_price }}</text></view>
+                    </view>
+                </view>
+            </view>
+        </view>
+    </scroll-view>
+    <loadMore :show.sync="loading"></loadMore>
+    <placeholder :show.sync="isEmpty"></placeholder>
+</template>
+
+<script>
+    import wepy from 'wepy';
+    import api from '@/api/api';
+    import Placeholder from '@/components/common/placeholder';
+    import LoadMore from '@/components/common/loadMore';
+
+    export default class Products extends wepy.page {
+        components = {
+            placeholder: Placeholder,
+            loadMore: LoadMore,
+        };
+        config = {
+            navigationBarTitleText: "优惠券可用商品",
+            usingComponents: {
+                "zan-search": "../../zanUi/search/index",
+            },
+        };
+        data = {
+            loading: false,
+            products: [],
+            page: 1,
+            total: 0,
+            lastPage: 1,
+            order: null,
+            topHeight: 0,
+            couponId: 0,
+            type: null
+        };
+        onLoad(params) {
+            this.couponId = params.coupon_id;
+            this.type = params.type ? params.type : null;
+            this.getProducts();
+        }
+        onShow() {
+            
+        };
+        loadMore() {
+            this.page++;
+            if (this.page <= this.lastPage) {
+                this.getProducts();
+            }
+        };
+        async getProducts() {
+            this.loading = this.page == 1 ? false : true;
+            console.log(this.couponId);
+            let res = await api[this.type == 'user' ? 'getUserCouponProducts' : 'getCouponProducts'](this.couponId, {
+                _loading: this.page == 1 ? true: false,
+                data: {
+                    page: this.page,
+                }
+            });
+            this.loading = false;
+            this.products = this.page == 1 ? [] : this.products;
+            for (let item of res.data.data) {
+                this.products.push(item);
+            }
+            this.lastPage = res.data.meta.pagination.total_pages;
+            this.total = res.data.meta.pagination.total;
+            this.$apply();
+        };
+        methods = {
+            to(item) {
+                wepy.navigateTo({
+                    url: '/pages/shop/product?id=' + item.id
+                });
+            },
+        };
+    }
+</script>
+
+<style lang="scss" scoped>
+    @import '../../assets/sass/variable';
+
+    .products {
+        .item {
+            float: left;
+            width: 50%;
+            .item-wrap {
+                background: #fff;
+                margin-bottom: 0.3rem;
+            }
+            &:nth-child(2n-1) {
+                margin-left: -0.1rem;
+            }
+            &:nth-child(2n) {
+                margin-left: 0.1rem;
+                .item-wrap {
+                    margin-left: 0.2rem;
+                }
+            }
+            .thumb {
+                width: 10rem;
+                height: 10rem;
+                text-align: center;
+                image {
+                    width: 100%;
+                    height: 100%;
+                }
+            }
+            .content {
+                padding: 10px;
+                .name {
+                    height: 40px;
+                }
+                .price {
+                    padding-top: 10px;
+                    color: $color-danger;
+                }
+            }
+        }
+    }
+</style>

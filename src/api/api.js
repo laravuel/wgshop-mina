@@ -42,9 +42,11 @@ const receivingOrder = (id) => http.request(`/shop/orders/${id}/receiving`, { me
 // 优惠券
 const getUserCoupons = (object) => http.request(`/user/coupons`, object);
 const getUserCoupon = (id, data) => http.request(`/user/coupons/${id}`, { data });
+const getUserCouponProducts = (id, object) => http.request(`/user/coupons/${id}/products`, object);
 const storeCoupon = (couponId, data = {}) => http.request(`/user/coupons`, { method: 'POST', data: Object.assign(data, { coupon_id: couponId }) });
-const getCoupons = (data) => http.request(`/shop/coupons`, { data });
+const getCoupons = (object) => http.request(`/shop/coupons`, object);
 const getCoupon = (id, data) => http.request(`/shop/coupons/${id}`, { data });
+const getCouponProducts = (id, object) => http.request(`/shop/coupons/${id}/products`, object);
 
 // 专题/促销
 const getSpecials = (object) => http.request(`/shop/specials`, object);
@@ -76,8 +78,10 @@ export default {
     receivingOrder,
     getUserCoupons,
     getUserCoupon,
+    getUserCouponProducts,
     getCoupons,
     getCoupon,
+    getCouponProducts,
     getCategories,
     storeCoupon,
     getSpecials,

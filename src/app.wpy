@@ -19,6 +19,8 @@
                 'pages/shop/buy',
                 'pages/shop/orders',
                 'pages/shop/order',
+                'pages/shop/coupon',
+                'pages/shop/coupon-products',
                 'pages/shop/coupons',
                 'pages/shop/specials',
                 'pages/shop/special',

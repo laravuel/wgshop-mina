@@ -121,9 +121,16 @@
                         wepy.navigateBack();
                     }
                     else {
-                        wepy.redirectTo({
-                            url : '/pages/index'
-                        });
+                        if(coupon.is_all) {
+                            wepy.navigateTo({
+                                url: '/pages/shop/products'
+                            });
+                        }
+                        else {
+                            wepy.navigateTo({
+                                url: '/pages/shop/coupon-products?coupon_id=' + coupon.id + `&type=user`
+                            });
+                        }
                     }
                 }
             }
@@ -166,6 +173,7 @@
             background: #fff;
         }
         .item-block__content {
+            font-size: 12px;
             padding: 10px 20px;
         }
         .item-left {

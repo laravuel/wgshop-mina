@@ -16,14 +16,14 @@
         <view class="panel">
             <zan-panel hide-border>
                 <zan-cell-group>
-                    <zan-cell title="领券" is-link url="/pages/shop/coupons">
+                    <zan-cell title="领券" is-link url="/pages/shop/coupons?product_id={{ product.id }}">
                         <text class="wg-icon wg-icon-youhuiquan" slot="icon"></text>
                         <view slot="footer" wx:if="{{ product.couponsCount }}">有 <text class="wg-color-danger">{{ product.couponsCount }}</text> 张优惠券，赶快领取!!!!</view>
                         <view slot="footer" wx:else>暂无可用优惠券~</view>
                     </zan-cell>
                     <zan-cell title="促销" wx:if="{{ product.activity }}" is-link url="/pages/shop/special?id={{ product.activity.id }}">
                         <text class="wg-icon wg-icon-cuxiao" slot="icon"></text>
-                        <view slot="footer">该商品正在进行促销，点击查看~</view>
+                        <view slot="footer">{{ product.activity.condition_string }} 点击查看~</view>
                     </zan-cell>
                 </zan-cell-group>
             </zan-panel>

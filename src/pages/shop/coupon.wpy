@@ -2,9 +2,10 @@
     <view>
         <coupon :coupon.sync="coupon"></coupon>
 
-        <button class="wg-btn large use-btn radius" wx:if="{{ coupon.expire }}" disabled>已过期</button>
-        <button class="wg-btn large use-btn radius" wx:elif="{{ coupon.is_use }}" disabled>已使用</button>
-        <button class="wg-btn-danger large use-btn radius" wx:else @tap="use">立即使用</button>
+        <view class="buttons wg-flex-between">
+            <button class="wg-btn-danger large use-btn radius" @tap="get">立即领取</button>
+            <button class="wg-btn-primary large use-btn radius" @tap="to">我的优惠券</button>
+        </view>
     </view>
 </template>
 <script>
@@ -17,7 +18,7 @@
             coupon: CouponComponent
         };
         config = {
-            navigationBarTitleText: "我的优惠券",
+            navigationBarTitleText: "领取优惠券",
             navigationBarBackgroundColor: '#000',
             navigationBarTextStyle: 'light',
             usingComponents: {
@@ -39,22 +40,23 @@
             console.log('share');
         }
         async getCoupon() {
-            let res = await api.getUserCoupon(this.id);
+            let res = await api.getCoupon(this.id);
             this.coupon = res.data;
             this.$apply();
         }
         methods = {
-            use() {
-                if(this.coupon.is_all) {
-                    wepy.navigateTo({
-                        url: '/pages/shop/products'
+            async get() {
+                let res = await api.storeCoupon(this.id);
+                if(!res.error) {
+                    await wepy.showToast({
+                        title: '领取成功'
                     });
                 }
-                else {
-                    wepy.navigateTo({
-                        url: '/pages/shop/coupon-products?coupon_id=' + this.coupon.id + `&type=user`
-                    });
-                }
+            },
+            to() {
+                wx.redirectTo({
+                    url: '/pages/home/coupons'
+                })
             }
         };
     }
@@ -63,5 +65,6 @@
 <style lang="scss" scoped>
     .use-btn {
         margin: 15px;
+        width: 45%
     }
 </style>

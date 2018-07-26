@@ -1,0 +1,92 @@
+<template>
+    <view class="coupon">
+        <view class="coupon-main">
+            <image src="../assets/images/dot.png" mode="withFix" class="dot"/>
+            <view class="header wg-flex-between">
+                <view class="title">{{ coupon.name }}</view>
+                <view><button class="share wg-btn" open-type="share">分享</button></view>
+            </view>
+            <view class="text">
+                <view class="value">{{ coupon.value }}{{ coupon.unit }}<text wx:if="{{ coupon.use_condition }}"> / 满{{ coupon.use_condition }}元可使用</text></view>
+                <view class="max" >领取限制：<text wx:if="{{ coupon.max > 0 }}">可领取{{ coupon.max }}张</text><text wx:else>无限制</text></view>
+                <view class="date">有效日期：{{ coupon.start_time || '' }} - {{ coupon.end_time || '' }}</view>
+            </view>
+        </view>
+        <view class="coupon-content">
+            <view class="title">使用说明</view>
+            <view class="info">
+                <view wx:if="{{ coupon.is_all }}">全店通用</view>
+                <view wx:if="{{ coupon.is_useable }}">部分商品可用</view>
+                <view wx:if="{{ coupon.is_disabled }}">部分商品不可用</view>
+                {{ coupon.content || '暂无使用说明...' }}
+            </view>
+        </view>
+    </view>
+</template>
+
+<script>
+    import wepy from 'wepy';
+
+    export default class Coupon extends wepy.component {
+        props = {
+            coupon: {
+                type: Object,
+                default: null,
+            }
+        };
+    }
+</script>
+
+<style lang="scss" scoped>
+    @import '../assets/sass/variable';
+    .coupon {
+        .coupon-main {
+            background: linear-gradient(90deg, $color-danger, $color-danger, $color-danger, $color-warn);
+            color: #fff;
+            padding: 20px;
+            position: relative;
+            .dot {
+                width: 100%;
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 5px;
+            }
+            .header {
+                .title {
+                    font-size: 18px;
+                }
+                button.share {
+                    border: 1px solid #eee;
+                    color: #eee;
+                    border-radius: 3px;
+                    background: none;
+                }
+            }
+            .text {
+                text-align: center;
+                .value {
+                    font-size: 35px;
+                    padding: 30px 0 20px 0;
+                    text {
+                        font-size: 13px;
+                    }
+                }
+                .date {
+                    color: #eee;
+                    padding-top: 10px;
+                }
+            }
+        }
+        .coupon-content {
+            .title {
+                padding: 15px;
+            }
+            .info {
+                background: #fff;
+                padding: 20px 10px;
+            }
+        }
+    }
+</style>

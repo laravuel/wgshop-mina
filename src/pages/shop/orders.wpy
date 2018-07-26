@@ -60,6 +60,7 @@
     import api from '@/api/api';
     import Placeholder from '@/components/common/placeholder';
     import LoadMore from '@/components/common/loadMore';
+    import pay from '@/utils/pay';
 
     export default class Orders extends wepy.page {
         components = {
@@ -170,10 +171,11 @@
             pay(index) {
                 let order = this.orders[index];
                 let that = this;
-                pay.store(this.order, {
+                pay.store(order, {
                     success(order) {
-                        this.orders.splice(index, 1, order);
-                        this.$apply();
+                        wepy.redirectTo({
+                            url: '/pages/shop/order?id=' + order.id
+                        });
                     },
                     error(order) {
                     }
