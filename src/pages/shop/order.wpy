@@ -142,7 +142,7 @@
             this.getOrder();
         };
         async getOrder() {
-            let res = await api.getOrder(this.id, { include: 'details,userCoupon' });
+            let res = await api.getOrder(this.id, { include: 'details' });
             this.order = res.data;
             this.$apply();
         };

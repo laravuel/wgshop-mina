@@ -141,7 +141,6 @@
             }
         };
         onLoad(param) {
-            console.log(param);
             wepy.setNavigationBarTitle({
                 title: '下单'
             });
@@ -280,19 +279,20 @@
                     data.carts = this.cartIds ? this.cartIds.split(',') : null;
                 }
                 if(this.coupon) {
-                    data.coupon_id = this.coupon.id;
+                    data.coupon_id = this.couponId;
                 }
                 
                 let res = await api.storeOrder(data);
                 if (!res.error) {
                     pay.store(res.data, {
                         success(order) {
+                            wx.removeStorageSync('coupon_id');
                             wepy.redirectTo({
                                 url: '/pages/shop/order?id=' + order.id
                             });
                         },
                         error(order) {
-                            console.log(order);
+                            wx.removeStorageSync('coupon_id');
                             wepy.redirectTo({
                                 url: '/pages/shop/order?id=' + order.id
                             });

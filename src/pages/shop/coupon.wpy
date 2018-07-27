@@ -2,9 +2,16 @@
     <view>
         <coupon :coupon.sync="coupon"></coupon>
 
-        <view class="buttons wg-flex-between">
-            <button class="wg-btn-danger large use-btn radius" @tap="get">立即领取</button>
-            <button class="wg-btn-primary large use-btn radius" @tap="to">我的优惠券</button>
+        <view class="buttons wg-flex-between" wx:if="{{ coupon }}">
+            <block wx:if="{{ !coupon.have }}">
+                <button class="wg-btn-danger large use-btn radius" @tap="get">立即领取</button>
+                <button class="wg-btn-primary large use-btn radius" @tap="to">我的优惠券</button>
+            </block>
+            <block wx:else>
+                <button class="wg-btn large radius" wx:if="{{ coupon.expire }}" disabled>已过期</button>
+                <button class="wg-btn large radius" wx:elif="{{ coupon.is_use }}" disabled>已使用</button>
+                <button class="wg-btn-danger large radius" wx:else @tap="use">立即使用</button>
+            </block>
         </view>
     </view>
 </template>
@@ -27,20 +34,22 @@
         };
         data = {
             id: 0,
-            coupon: null
+            coupon: null,
+            type: null,
         };
         computed = {
             
         };
         onLoad(params) {
             this.id = params.id;
+            this.type = params.type ? params.type : null;
             this.getCoupon();
         }
         onShareAppMessage() {
             console.log('share');
         }
         async getCoupon() {
-            let res = await api.getCoupon(this.id);
+            let res = await api[this.type == 'user' ? 'getUserCoupon' : 'getCoupon'](this.id);
             this.coupon = res.data;
             this.$apply();
         }
@@ -57,14 +66,33 @@
                 wx.redirectTo({
                     url: '/pages/home/coupons'
                 })
+            },
+            use() {
+                if(this.coupon.is_all) {
+                    wepy.navigateTo({
+                        url: '/pages/shop/products'
+                    });
+                }
+                else {
+                    wepy.navigateTo({
+                        url: '/pages/shop/coupon-products?coupon_id=' + this.coupon.id
+                    });
+                }
             }
         };
     }
 </script>
 
 <style lang="scss" scoped>
-    .use-btn {
-        margin: 15px;
-        width: 45%
+    .buttons {
+        button {
+            width: 100%;
+            margin: 15px;
+        }
+        button.use-btn {
+            margin: 15px;
+            width: 45%
+        }
     }
+    
 </style>

@@ -28,7 +28,6 @@
                 'pages/home/address/index',
                 'pages/home/address/edit',
                 'pages/home/coupons',
-                'pages/home/coupon',
                 'pages/auth/login',
             ],
             window: {

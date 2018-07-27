@@ -44,11 +44,9 @@
             order: null,
             topHeight: 0,
             couponId: 0,
-            type: null
         };
         onLoad(params) {
             this.couponId = params.coupon_id;
-            this.type = params.type ? params.type : null;
             this.getProducts();
         }
         onShow() {
@@ -62,8 +60,7 @@
         };
         async getProducts() {
             this.loading = this.page == 1 ? false : true;
-            console.log(this.couponId);
-            let res = await api[this.type == 'user' ? 'getUserCouponProducts' : 'getCouponProducts'](this.couponId, {
+            let res = await api.getCouponProducts(this.couponId, {
                 _loading: this.page == 1 ? true: false,
                 data: {
                     page: this.page,

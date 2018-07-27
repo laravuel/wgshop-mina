@@ -5,7 +5,7 @@
     <view class="coupons">
         <scroll-view wx:if="{{ coupons }}" style="height: {{ height - 55 }}px;" scroll-y bindscrolltolower="loadMore" wx:if="{{ !isEmpty }}">
             <view class=" zan-clearfix item {{ item.expire || item.is_use ? 'item-over' : ''}} su-clear" wx:for="{{ coupons }}" wx:key="id">
-                <navigator url="{{ '/pages/home/coupon?id='+item.id }}" class="item-block item-left">
+                <navigator url="{{ '/pages/shop/coupon?type=user&id='+item.user_coupon.id }}" class="item-block item-left">
                     <view class="item-block__content">
                         <view class="item-left-number">{{ item.name }}<text>{{ item.value }}</text>{{ item.unit }}</view>
                         <view class="item-left-des">使用限制：<text wx:if="{{ item.use_condition }}">满{{ item.use_condition }}可用</text><text wx:else>无限制</text></view>
@@ -117,7 +117,7 @@
             use(coupon) {
                 if(!coupon.expire) {
                     if(this.type == 'select') {
-                        wx.setStorageSync('coupon_id', coupon.id);
+                        wx.setStorageSync('coupon_id', coupon.user_coupon.id);
                         wepy.navigateBack();
                     }
                     else {
@@ -128,7 +128,7 @@
                         }
                         else {
                             wepy.navigateTo({
-                                url: '/pages/shop/coupon-products?coupon_id=' + coupon.id + `&type=user`
+                                url: '/pages/shop/coupon-products?coupon_id=' + coupon.id
                             });
                         }
                     }
