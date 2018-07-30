@@ -22,6 +22,7 @@ const getCarts = (data) => http.request(`/shop/carts`, { data });
 const storeCart = (data) => http.request(`/shop/carts`, { method: 'POST', data });
 const updateCart = (id, num) => http.request(`/shop/carts/${id}`, { method: 'PUT', data: { num: num } });
 const deleteCart = (id) => http.request(`/shop/carts/${id}`, { method: 'DELETE' });
+const selectCart = (id) => http.request(`/shop/carts/${id}/select`, { method: 'POST' });
 
 // 收货地址
 const getDistricts = (data) => http.request(`/districts`, { _loading: false, data });
@@ -33,6 +34,7 @@ const deleteAddress = (id) => http.request(`/user/addresses/${id}`, { method: 'D
 
 // 订单
 const getOrders = (object) => http.request(`/shop/orders`, object);
+const confirmOrder = (data) => http.request(`/shop/orders/confirm`, { data });
 const getOrder = (id, data) => http.request(`/shop/orders/${id}`, { data });
 const storeOrder = (data) => http.request(`/shop/orders`, { method: 'POST', data });
 const updateOrder = (id, data) => http.request(`/shop/orders/${id}`, { method: 'PUT', data });
@@ -42,7 +44,6 @@ const receivingOrder = (id) => http.request(`/shop/orders/${id}/receiving`, { me
 // 优惠券
 const getUserCoupons = (object) => http.request(`/user/coupons`, object);
 const getUserCoupon = (id, data) => http.request(`/user/coupons/${id}`, { data });
-const getUserCouponProducts = (id, object) => http.request(`/user/coupons/${id}/products`, object);
 const storeCoupon = (couponId, data = {}) => http.request(`/user/coupons`, { method: 'POST', data: Object.assign(data, { coupon_id: couponId }) });
 const getCoupons = (object) => http.request(`/shop/coupons`, object);
 const getCoupon = (id, data) => http.request(`/shop/coupons/${id}`, { data });
@@ -64,6 +65,7 @@ export default {
     storeCart,
     updateCart,
     deleteCart,
+    selectCart,
     getDistricts,
     getAddress,
     getAddresses,
@@ -71,6 +73,7 @@ export default {
     updateAddress,
     deleteAddress,
     getOrders,
+    confirmOrder,
     getOrder,
     storeOrder,
     updateOrder,
@@ -78,7 +81,6 @@ export default {
     receivingOrder,
     getUserCoupons,
     getUserCoupon,
-    getUserCouponProducts,
     getCoupons,
     getCoupon,
     getCouponProducts,

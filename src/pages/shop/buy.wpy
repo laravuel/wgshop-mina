@@ -88,7 +88,10 @@
     <view class="buy-nav">
         <zan-row>
             <zan-col col="16">
-                <view class="price">合计：<text class="wg-color-danger">{{ total.amount }}元</text></view>
+                <view class="price">
+                    <text class="wg-color-gray zan-font-12" style="margin-right: 10px;">优惠：<text>￥{{ total.spread }}</text></text>
+                    <text class="wg-color-danger">合计：<text>￥{{ total.discount_price }}</text></text>
+                </view>
             </zan-col>
             <zan-col col="8">
                 <button disabled="{{ total.num <= 0 }}" class="wg-btn-danger large" @tap="submit">提交订单</button>
@@ -121,13 +124,13 @@
             productId: null,
             skuId: null,
             num: 0,
-            cartIds: null,
             carts: null,
             isEmpty: false,
             address: null,
             coupon: null,
             activity: null,
             activityDiscounts: 0,
+            total: null,
         };
         computed = {
             addressId() {
@@ -135,9 +138,6 @@
             },
             couponId() {
                 return wepy.getStorageSync('coupon_id');
-            },
-            total() {
-                return this.getTotal();
             }
         };
         onLoad(param) {
@@ -145,116 +145,87 @@
                 title: '下单'
             });
             // 直接购买
-            this.productId = param.product_id;
-            this.skuId = param.sku_id;
-            this.num = param.num;
-            // 购物车下单
-            this.cartIds = param.carts;
+            this.productId = param.product_id || 0;
+            this.skuId = param.sku_id || 0;
+            this.num = param.num || 0;
         };
         async onShow() {
-            if ((this.skuId || this.productId) && !this.num && !this.cartIds) {
-                this.isEmpty = true;
-                return;
-            }
-            if (this.skuId && this.productId) {
-                // 直接购买 选择了sku的商品
-                let res = await api.getProductSku(this.productId, this.skuId, {
-                    include: 'params,product.activity'
-                });
-                this.carts = [];
-                this.carts.push({
-                    sku: res.data,
-                    product: res.data.product,
-                    num: this.num
-                });
-                this.activity = res.data.product.activity;
-                delete(res.data.product.activity);
-            } else if (this.productId) {
-                // 直接购买 无sku的商品
-                let res = await api.getProduct(this.productId, {
-                    include: 'skus,activity'
-                });
-                if(res.data.skus) {
-                    wepy.showModal({
-                        title: '提示',
-                        content: '请选择商品规格！',
-                        showCancel: false,
-                    }).then(ret => {
-                        wepy.navigateBack();
-                    });
-                    return ;
-                }
-                this.carts = [];
-                this.carts.push({
-                    sku: null,
-                    product: res.data,
-                    num: this.num
-                });
-                this.activity = res.data.activity;
-                delete(res.data.activity);
-            } else if (this.cartIds) {
-                // 购物车选择购买
-                let res = await api.getCarts({
-                    ids: this.cartIds,
-                    include: 'product,sku',
-                    params: 1
-                });
-                this.carts = res.data.data;
-                this.activity = res.data.meta.activity;
-            }
+            let res = await api.confirmOrder({
+                product_id: this.productId,
+                sku_id: this.skuId,
+                coupon_id: this.couponId,
+            });
+            this.carts = res.data.data;
+            this.total = res.data.total;
+            this.coupon = res.data.coupon;
+            console.log(res.data);
+            // if ((this.skuId || this.productId) && !this.num) {
+            //     this.isEmpty = true;
+            //     return;
+            // }
+            // if (this.skuId && this.productId) {
+            //     // 直接购买 选择了sku的商品
+            //     let res = await api.getProductSku(this.productId, this.skuId, {
+            //         include: 'params,product.activity'
+            //     });
+            //     this.carts = [];
+            //     this.carts.push({
+            //         sku: res.data,
+            //         product: res.data.product,
+            //         num: this.num
+            //     });
+            //     this.activity = res.data.product.activity;
+            //     delete(res.data.product.activity);
+            // } else if (this.productId) {
+            //     // 直接购买 无sku的商品
+            //     let res = await api.getProduct(this.productId, {
+            //         include: 'skus,activity'
+            //     });
+            //     if(res.data.skus) {
+            //         wepy.showModal({
+            //             title: '提示',
+            //             content: '请选择商品规格！',
+            //             showCancel: false,
+            //         }).then(ret => {
+            //             wepy.navigateBack();
+            //         });
+            //         return ;
+            //     }
+            //     this.carts = [];
+            //     this.carts.push({
+            //         sku: null,
+            //         product: res.data,
+            //         num: this.num
+            //     });
+            //     this.activity = res.data.activity;
+            //     delete(res.data.activity);
+            // } else {
+            //     // 购物车选择购买
+            //     let res = await api.getCarts({
+            //         include: 'product,sku',
+            //         selected: 1,
+            //         params: 1
+            //     });
+            //     this.carts = res.data.data;
+            //     this.activity = res.data.meta.activity;
+            // }
             if(this.addressId) {
                 let res = await api.getAddress(this.addressId);
                 this.address = res.data;
             }
-            if(this.couponId) {
-                let res = await api.getUserCoupon(this.couponId);
-                if(res.error) {
-                    wx.removeStorageSync('coupon_id');
-                }
-                else {
-                    this.coupon = res.data;
-                }
-            }
+            // if(this.couponId) {
+            //     let res = await api.getUserCoupon(this.couponId);
+            //     if(res.error) {
+            //         wx.removeStorageSync('coupon_id');
+            //     }
+            //     else {
+            //         this.coupon = res.data;
+            //     }
+            // }
             this.$apply();
         };
         onUnload() {
             wx.removeStorageSync('coupon_id');
-        }
-        getTotal() {
-            let price = 0;
-            let amount = 0;
-            let num = 0;
-            if(this.carts) {
-                this.carts.forEach(item => {
-                    price += (item.sku ? item.sku.price : (item.product.old_price || item.product.price)) * item.num;
-                    num += item.num;
-                });
-            }
-            amount = price;
-            // 促销折扣计算
-            if(this.activity && this.activity.is_discount) {
-                amount *= this.activity.condition.discount / 10;
-                this.activityDiscounts = price - amount;
-            }
-            // 促销满减计算
-            if(this.activity && this.activity.is_money_off && price >= this.activity.condition.max_money) {
-                amount -= this.activity.condition.minus;
-                this.activityDiscounts = this.activity.condition.minus;
-            }
-            // 选择优惠券重新计算总价
-            if(this.coupon) {
-                if(this.coupon.type == 1) {
-                    amount -= this.coupon.value;
-                }
-                else {
-                    amount *= this.coupon.value / 10;
-                }
-            }
-            return {
-                price: price,
-                amount: amount,
-                num: num
-            };
         }
         methods = {
             showAddresses() {

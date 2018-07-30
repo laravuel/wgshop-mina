@@ -2,20 +2,19 @@
     <view class="detailed-list">
         <block wx:for="{{ carts }}" wx:key="id" wx:for-index="cartIndex" wx:for-item="cart">
             <view class="cart">
-                <view class="cart-group">
-                    <navigator url="/pages/shop/special?id={{ cart.group.id }}" class="title" wx:if="{{ cart.group.id }}">
-                        <text><text wx:if="{{ cart.group.id }}">促销：</text>{{ cart.group.name }}</text>
-                        <text>【{{ cart.group.condition_string }}】</text>
-                    </navigator>
-                    <view wx:else class="title" style="color: #444;">
-                        {{ cart.group.name }}
+                <view class="activity" wx:if="{{ cart.activity.id }}">
+                    <view class="zan-clearfix activity-item">
+                        <view wx:for="{{ cart.activity.rules }}" wx:key="index" class="zan-ellipsis">
+                            <zan-tag plain type="danger" style="margin-right: 5px;">{{ item.type }}</zan-tag>
+                            <text wx:for="{{ item.items }}" wx:for-item="name">{{ name }}，</text>
+                        </view>
                     </view>
                 </view>
-                <view class="item" wx:for="{{ cart.products }}" wx:for-index="index" wx:for-item="item" wx:key="{{ item.id }}">
+                <view class="item" wx:for="{{ cart.carts }}" wx:for-index="index" wx:for-item="item" wx:key="{{ item.id }}">
                     <view class="item-header">
                         <zan-row>
                             <zan-col col="2">
-                                <view class="select zan-c-gray-dark" @tap="select({{ cartIndex }}, {{ index }})">
+                                <view class="select zan-c-gray-dark" @tap="select({{ item.id }})">
                                     <zan-icon type="check" class="select-icon" wx:if="{{ !item.selected }}"></zan-icon>
                                     <zan-icon type="checked" class="select-icon selected" wx:else></zan-icon>
                                 </view>
@@ -54,11 +53,14 @@
                             <zan-col col="14">
                                 <view class="flex-middle cart-num">
                                     <zan-stepper stepper="{{ item.num }}" min="1" max="{{ item.sku ? item.sku.stocks : item.product.stocks }}" size="small" bind:change="setNum({{ cartIndex }}, {{ index }})"></zan-stepper>
-                                    <view class="delete" @tap="remove({{ cartIndex }}, {{ index }})"><zan-icon type="delete"></zan-icon></view>
+                                    <view class="delete" @tap="remove({{ item.id }})"><zan-icon type="delete"></zan-icon></view>
                                 </view>
                             </zan-col>
                         </zan-row>
                     </view>
+                </view>
+                <view class="item-total">
+                    <view><text>优惠：￥{{ cart.total.spread }}</text><text>小计：￥{{ cart.total.discount_price }}</text></view>
                 </view>
             </view>
         </block>
@@ -81,10 +83,13 @@
                     全选
                 </view>
             </zan-col>
-            <zan-col col="10">
-                <view class="price">合计：<text>{{ total.price }}元</text></view>
+            <zan-col col="12">
+                <view class="price">
+                    <text>优惠：￥{{ total.spread }}</text>
+                    <text>合计：￥{{ total.discount_price }}</text>
+                </view>
             </zan-col>
-            <zan-col col="8">
+            <zan-col col="6">
                 <button disabled="{{ total.num <= 0 }}" class="wg-btn-danger large" @tap="order">结算({{ total.num }})</button>
             </zan-col>
         </zan-row>
@@ -109,13 +114,18 @@
                 "zan-col": "../../zanUi/col/index",
                 "zan-icon": "../../zanUi/icon/index",
                 "zan-stepper": "../../zanUi/stepper/index",
+                "zan-tag": "../../zanUi/tag/index",
             },
         };
         data = {
             carts: null,
             selected: [],
-        };
-        onLoad() {
+            total: {
+                num: 0,
+                price: 0,
+                discount_price: 0,
+                spread: 0,
+            }
         };
         computed = {
             isEmpty() {
@@ -127,52 +137,17 @@
                 }
                 return false;
             },
-            total() {
-                let total = {
-                    price: 0,
-                    num: 0
-                };
-                if(!this.isEmpty) {
-                    this.carts.map(cart => {
-                        cart.products.map(item => {
-                            if(item.selected) {
-                                total.price += (item.sku ? (item.sku.activity_price || item.sku.price) : item.product.price) * item.num;
-                                total.num += item.num;
-                            }
-                        });
-                        // 满减计算
-                        if(cart.group.id && cart.group.is_money_off && total.price >= cart.group.condition.max_money) {
-                            total.price -= cart.group.condition.minus;
-                        }
-                    });
-                }
-                return total;
-            }
-        };
-        watch = {
-            carts() {
-                let selected = [];
-                this.carts.map(cart => {
-                    cart.products.map(item => {
-                        if(item.selected) {
-                            selected.push(item.id);
-                        }
-                    });
-                });
-                this.selected = selected;
-                this.$apply();
-            }
         };
         async onShow() {
             let res = await api.getCarts({ include: 'product,sku', params: 1 });
             this.carts = res.data.data;
-            // this.selectAll();
+            this.total = res.data.total;
             this.$apply();
         };
         selectAll() {
             if(this.carts.length == 1) {
                 this.carts.map(cart => {
-                    cart.products.map(item => {
+                    cart.carts.map(item => {
                         item.selected = this.selectedAll ? false : true;
                     });
                 });
@@ -180,37 +155,31 @@
             
         };
         methods = {
-            select(cartIndex, index) {
-                let product = this.carts[cartIndex]['products'][index];
-                if(!product.selected) {
-                    this.carts.map((cart, i) => {
-                        if(i == cartIndex) return;
-                        cart.products.map(item => {
-                            item.selected = false;
-                        });
-                    });
-                }
-                this.carts[cartIndex]['products'][index].selected = !product.selected;
+            async select(id) {
+                let res = await api.selectCart(id);
+                this.carts = res.data.data;
+                this.total = res.data.total;
+                this.$apply();
             },
             async setNum(cartIndex, index, event) {
                 let that = this;
-                let product = this.carts[cartIndex].products[index];
-                product.num = event.detail;
-                await api.updateCart(product.id, product.num);
+                let product = this.carts[cartIndex].carts[index];
+                let res = await api.updateCart(product.id, event.detail);
+                this.carts = res.data.data;
+                this.total = res.data.total;
+                this.$apply();
             },
-            async remove(cartIndex, index) {
-                let res = await api.deleteCart(this.carts[cartIndex].products[index].id);
+            async remove(id) {
+                let res = await api.deleteCart(id);
                 if(!res.error) {
-                    this.carts[cartIndex].products.splice(index, 1);
-                    if(!this.carts[cartIndex].products.length) {
-                        this.carts.splice(cartIndex, 1);
-                    }
+                    this.carts = res.data.data;
+                    this.total = res.data.total;
                     this.$apply();
                 }
             },
             order() {
                 wepy.navigateTo({
-                    url: '/pages/shop/buy?carts=' + this.selected.join(',')
+                    url: '/pages/shop/buy'
                 });
             }
         }
@@ -224,11 +193,20 @@
     }
     .cart {
         padding: 10px;
-        .cart-group {
+        .activity {
             background: #fff;
-            padding: 15px;
-            .title {
-                color: $color-danger;
+            .activity-item {
+                padding: 10px;
+                color: #999;
+                line-height: 24px;
+            }
+        }
+        .item-total {
+            text-align: right;
+            padding: 20px 10px;
+            background: #fff;
+            text {
+                margin-left: 10px;
             }
         }
     }
@@ -249,10 +227,13 @@
         }
         .price {
             text-align: right;
-            padding-right: 20px;
-            font-size: 16px;
-            text {
-                color: $color-danger;
+            padding-right: 10px;
+            font-size: 14px;
+            color: $color-danger;
+            text:first-child {
+                font-size: 12px;
+                color: #999;
+                margin-right: 5px;
             }
         }
     }

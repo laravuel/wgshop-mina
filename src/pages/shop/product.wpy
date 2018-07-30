@@ -13,19 +13,24 @@
             <view class="description">{{ product.description || '' }}</view>
             <view class="price zan-font-18">￥{{ product.price }} <text class="zan-text-deleted wg-color-gray zan-font-12" wx:if="{{ product.old_price }}">￥{{ product.old_price }}</text></view>
         </view>
-        <view class="panel">
+        <view class="panel promotion">
             <zan-panel hide-border>
-                <zan-cell-group>
-                    <zan-cell title="领券" is-link url="/pages/shop/coupons?product_id={{ product.id }}">
-                        <text class="wg-icon wg-icon-youhuiquan" slot="icon"></text>
+                <navigator url="/pages/shop/coupons?product_id={{ product.id }}" class="zan-clearfix item">
+                    <view class="title">领券</view>
+                    <view class="content">
                         <view slot="footer" wx:if="{{ product.couponsCount }}">有 <text class="wg-color-danger">{{ product.couponsCount }}</text> 张优惠券，赶快领取!!!!</view>
                         <view slot="footer" wx:else>暂无可用优惠券~</view>
-                    </zan-cell>
-                    <zan-cell title="促销" wx:if="{{ product.activity }}" is-link url="/pages/shop/special?id={{ product.activity.id }}">
-                        <text class="wg-icon wg-icon-cuxiao" slot="icon"></text>
-                        <view slot="footer">{{ product.activity.condition_string }} 点击查看~</view>
-                    </zan-cell>
-                </zan-cell-group>
+                    </view>
+                </navigator>
+                <view class="zan-clearfix item" wx:if="{{ product.activity }}">
+                    <view class="title">促销</view>
+                    <view class="content">
+                        <view wx:for="{{ product.activity }}" wx:key="index" class="zan-ellipsis">
+                            <zan-tag plain type="danger" style="margin-right: 5px;">{{ item.type }}</zan-tag>
+                            <text wx:for="{{ item.items }}" wx:for-item="name">{{ name }}，</text>
+                        </view>
+                    </view>
+                </view>
             </zan-panel>
         </view>
         <view class="panel" wx:if="{{ product.specs.data && product.specs.data.length }}">
@@ -128,6 +133,7 @@
                 "zan-popup": "../../zanUi/popup/index",
                 "zan-stepper": "../../zanUi/stepper/index",
                 "zan-badge": "../../zanUi/badge/index",
+                "zan-tag": "../../zanUi/tag/index",
             },
         };
         data = {
@@ -289,6 +295,20 @@
     }
     .panel {
         margin-bottom: 10px;
+    }
+    .promotion {
+        .item {
+            padding: 10px;
+            .title {
+                width: 50px;
+                float: left;
+            }
+            .content {
+                padding-left: 60px;
+                color: #999;
+                line-height: 24px;
+            }
+        }
     }
     .title-cell {
         background: #fff;
